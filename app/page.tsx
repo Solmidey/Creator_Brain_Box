@@ -517,26 +517,23 @@ function ContentHelperModal({
 // 1) Log the payload (no await, no const)
 console.log("Helper payload:", {
   mode,
-  platform,
   ideaText: text,
   contentType,
   energy,
-  referenceTweets,
-  attachmentsSummary,
+  referenceTweets: [],      // ✅ inline default
+  attachmentsSummary: "",   // ✅ inline default
 });
 
-// 2) Now call the API and await the response
 const response = await fetch("/api/helper", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    mode,              // e.g. "polish" | "x_thread"
-    platform,          // "x" | "linkedin" | ...
-    ideaText: text.trim(),   // ✅ this is what the backend needs
-    contentType,       // "thread" | "carousel" | ...
-    energy,            // 1–5
-    referenceTweets,
-    attachmentsSummary,
+    mode,                    // e.g. "polish" | "x_thread"
+    ideaText: text.trim(),   // main text
+    contentType,
+    energy,
+    referenceTweets: [],      // send empty list for now
+    attachmentsSummary: "",   // send empty summary
   }),
 });
 
