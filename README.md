@@ -14,6 +14,10 @@ A single-page Next.js 14 + TypeScript + Tailwind app for creators to capture, fi
    ```
 3. Open [http://localhost:3000](http://localhost:3000) to use the app.
 
+### AI helper environment variable
+
+- `OPENAI_API_KEY`: Set this to enable the AI helper responses.
+
 ## Features
 - Add multi-platform ideas with content type, energy, status, and next action metadata.
 - Drag-and-drop ideas across Inbox → Ready → Drafting → Posted.
