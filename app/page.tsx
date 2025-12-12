@@ -513,18 +513,32 @@ function ContentHelperModal({
     setError(null);
     setSuggestion("");
     try {
-      const response = await fetch("/api/helper", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          platforms,
-          mode,
-          referenceTweets: includeReferences ? seedIdea?.referenceTweets ?? [] : [],
-          contentType,
-          energy,
-        }),
-      });
+  
+// 1) Log the payload (no await, no const)
+console.log("Helper payload:", {
+  mode,
+  platform,
+  ideaText: text,
+  contentType,
+  energy,
+  referenceTweets,
+  attachmentsSummary,
+});
+
+// 2) Now call the API and await the response
+const response = await fetch("/api/helper", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    mode,              // e.g. "polish" | "x_thread"
+    platform,          // "x" | "linkedin" | ...
+    ideaText: text.trim(),   // ✅ this is what the backend needs
+    contentType,       // "thread" | "carousel" | ...
+    energy,            // 1–5
+    referenceTweets,
+    attachmentsSummary,
+  }),
+});
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
