@@ -635,7 +635,7 @@ export default function HomePage() {
         <div className="flex flex-col gap-3">
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-slate-900">Today's Focus</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Today&apos;s Focus</h3>
               <span className="text-xs text-slate-500">Top 3</span>
             </div>
             {focusIdeas.length === 0 ? (
@@ -727,7 +727,7 @@ export default function HomePage() {
         <div className="hidden space-y-4 md:block">
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-slate-900">Today's Focus</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Today&apos;s Focus</h3>
               <span className="text-xs text-slate-500">Top 3</span>
             </div>
             {focusIdeas.length === 0 ? (
