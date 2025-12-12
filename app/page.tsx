@@ -3,8 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import Logo from "./components/Logo";
-import { ThemeToggle } from "./components/ThemeToggle";
+import HeroHeader from "./components/HeroHeader";
 import { TiltCard } from "./components/TiltCard";
 import { useSavedIdeas } from "./hooks/useSavedIdeas";
 import type {
@@ -118,13 +117,13 @@ function filterIdeas(ideas: Idea[], filters: Filters) {
 function getNextActionColor(action: NextAction) {
   switch (action) {
     case "brain_dump":
-      return "bg-slate-200 text-slate-800 dark:text-slate-100";
+      return "bg-slate-200 text-slate-800 dark:bg-slate-800/70 dark:text-slate-100";
     case "outline":
-      return "bg-blue-100 text-blue-700";
+      return "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-100";
     case "publish":
-      return "bg-green-100 text-green-700";
+      return "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-100";
   }
-  return "bg-slate-100 text-slate-700 dark:text-slate-200";
+  return "bg-slate-100 text-slate-700 dark:bg-slate-800/70 dark:text-slate-100";
 }
 
 function inferAttachmentType(mimeType: string): AttachmentType {
@@ -199,7 +198,7 @@ function FilterPanel({
                 className={`rounded-full border px-3 py-1 text-sm transition ${
                   active
                     ? "border-sky-500 bg-sky-500 text-white dark:bg-sky-500 dark:text-white"
-                    : "border-slate-200 bg-slate-100 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-400"
+                    : "border-slate-200 bg-slate-100 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300"
                 }`}
               >
                 {platform}
@@ -222,7 +221,7 @@ function FilterPanel({
                 className={`rounded-full border px-3 py-1 text-sm transition ${
                   active
                     ? "border-sky-500 bg-sky-500 text-white dark:bg-sky-500 dark:text-white"
-                    : "border-slate-200 bg-slate-100 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-400"
+                    : "border-slate-200 bg-slate-100 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300"
                 }`}
               >
                 {status}
@@ -253,7 +252,7 @@ function FilterPanel({
                 className={`rounded-full border px-3 py-1 text-sm transition ${
                   active
                     ? "border-sky-500 bg-sky-500 text-white dark:bg-sky-500 dark:text-white"
-                    : "border-slate-200 bg-slate-100 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-400"
+                    : "border-slate-200 bg-slate-100 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300"
                 }`}
               >
                 {label}
@@ -277,16 +276,16 @@ function AttachmentStrip({
   const remaining = attachments.length - preview.length;
 
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 dark:text-slate-200 shadow-sm hover:border-blue-200 hover:bg-blue-50"
-    >
+      <button
+        type="button"
+        onClick={onOpen}
+        className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
+      >
       {preview.map((attachment) => (
-        <div
-          key={attachment.id}
-          className="flex items-center gap-1 rounded-md bg-white px-2 py-1 shadow-inner"
-        >
+          <div
+            key={attachment.id}
+            className="flex items-center gap-1 rounded-md bg-white px-2 py-1 shadow-inner dark:bg-slate-800/70"
+          >
           {attachment.type === "image" && attachment.dataUrl ? (
             <Image
               src={attachment.dataUrl}
@@ -312,14 +311,14 @@ function AttachmentStrip({
           </span>
         </div>
       ))}
-      {remaining > 0 && (
-        <span className="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200 shadow-inner">
-          +{remaining}
-        </span>
-      )}
-    </button>
-  );
-}
+        {remaining > 0 && (
+          <span className="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 shadow-inner dark:bg-slate-800/70 dark:text-slate-200">
+            +{remaining}
+          </span>
+        )}
+      </button>
+    );
+  }
 
 function AttachmentModal({
   open,
@@ -333,8 +332,8 @@ function AttachmentModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 shadow-xl">
+      <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 p-4">
+        <div className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900/90">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Attachments</h3>
           <button
@@ -347,12 +346,12 @@ function AttachmentModal({
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {attachments.map((attachment) => (
-            <div
-              key={attachment.id}
-              className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm"
-            >
+              <div
+                key={attachment.id}
+                className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/80"
+              >
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate">{attachment.name}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-300">
                 {attachment.type.toUpperCase()} • {(attachment.size / 1024).toFixed(0)} KB
               </p>
               {attachment.type === "image" && attachment.dataUrl ? (
@@ -515,7 +514,7 @@ const response = await fetch("/api/helper", {
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Content Helper</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-300">AI-powered assistance for polishing your idea.</p>
+            <p className="text-sm text-slate-600 dark:text-slate-200">AI-powered assistance for polishing your idea.</p>
           </div>
           <button
             type="button"
@@ -893,7 +892,9 @@ function AddIdeaForm({
           </div>
           <div
             className={`flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-4 text-sm transition ${
-              isDragging ? "border-blue-400 bg-blue-50" : "border-slate-300 bg-slate-50"
+              isDragging
+                ? "border-blue-400 bg-blue-50 dark:border-blue-400 dark:bg-blue-500/10"
+                : "border-slate-300 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
             }`}
             onDragOver={(e) => {
               e.preventDefault();
@@ -906,7 +907,7 @@ function AddIdeaForm({
               void handleFiles(e.dataTransfer.files);
             }}
           >
-            <p className="text-slate-700 dark:text-slate-100">Drag and drop files here, or use the picker.</p>
+            <p className="text-slate-700 dark:text-slate-200">Drag and drop files here, or use the picker.</p>
             <p className="text-xs text-slate-500 dark:text-slate-300">Up to 5MB per file for inline previews.</p>
           </div>
           {attachments.length > 0 && (
@@ -914,7 +915,7 @@ function AddIdeaForm({
               {attachments.map((attachment) => (
                 <div
                   key={attachment.id}
-                  className="relative flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                  className="relative flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/80"
                 >
                   {attachment.type === "image" && attachment.dataUrl ? (
                     <Image
@@ -926,7 +927,7 @@ function AddIdeaForm({
                       className="h-12 w-12 rounded object-cover"
                     />
                   ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    <div className="flex h-12 w-12 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-600 dark:bg-slate-800/70 dark:text-slate-300">
                       {attachment.type === "document"
                         ? "DOC"
                         : attachment.type === "video"
@@ -938,7 +939,7 @@ function AddIdeaForm({
                   )}
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-slate-800 dark:text-slate-50 truncate">{attachment.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{(attachment.size / 1024).toFixed(0)} KB</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-300">{(attachment.size / 1024).toFixed(0)} KB</p>
                     {!attachment.dataUrl && attachment.size > MAX_INLINE_ATTACHMENT_SIZE && (
                       <p className="text-[11px] text-amber-600">Too large for inline preview; metadata saved only.</p>
                     )}
@@ -966,7 +967,7 @@ function AddIdeaForm({
               value={tweetInput}
               onChange={(e) => setTweetInput(e.target.value)}
               placeholder="https://twitter.com/..."
-              className="flex-1 rounded-xl border border-slate-300 bg-white p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="flex-1 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-50 dark:placeholder:text-slate-500"
             />
             <button
               type="button"
@@ -990,7 +991,7 @@ function AddIdeaForm({
                     onClick={() =>
                       setReferenceTweets((prev) => prev.filter((item) => item !== link))
                     }
-                    className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
+                    className="text-slate-500 transition-colors hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
                   >
                     ×
                   </button>
@@ -1052,7 +1053,7 @@ function IdeaCard({ idea, onAskHelper }: { idea: Idea; onAskHelper: (idea: Idea)
         <Badge label={`⚡${idea.energy}`} colorClasses="bg-indigo-100 text-indigo-700" />
         <Badge label={NEXT_ACTION_LABELS[idea.nextAction]} colorClasses={getNextActionColor(idea.nextAction)} />
       </div>
-      <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">Created {formatDate(idea.createdAt)}</p>
+      <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-300">Created {formatDate(idea.createdAt)}</p>
 
       {idea.attachments && idea.attachments.length > 0 && (
         <AttachmentStrip attachments={idea.attachments} onOpen={() => setShowAttachments(true)} />
@@ -1125,7 +1126,7 @@ function IdeaColumn({
         </span>
       </div>
       {ideas.length === 0 ? (
-        <p className="text-xs text-slate-500 dark:text-slate-400">Drop an idea here</p>
+        <p className="text-xs text-slate-500 dark:text-slate-300">Drop an idea here</p>
       ) : (
         ideas.map((idea) => <IdeaCard key={idea.id} idea={idea} onAskHelper={onAskHelper} />)
       )}
@@ -1159,16 +1160,20 @@ function IdeaBoard({
 
 function TodayFocusCard({ idea }: { idea: Idea }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-      <p className="text-sm text-slate-900 dark:text-slate-50 break-words overflow-hidden">{idea.text}</p>
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+      <p className="overflow-hidden break-words text-sm text-slate-800 dark:text-slate-100">{idea.text}</p>
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-        <Badge label={`⚡${idea.energy}`} colorClasses="bg-indigo-100 text-indigo-700" />
+        <Badge label={`⚡${idea.energy}`} colorClasses="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-100" />
         <Badge
           label={CONTENT_TYPES.find((c) => c.value === idea.contentType)?.label ?? idea.contentType}
-          colorClasses="bg-amber-100 text-amber-700"
+          colorClasses="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-100"
         />
         {idea.platforms.slice(0, 3).map((platform) => (
-          <Badge key={platform} label={platform} colorClasses="bg-slate-100 text-slate-700 dark:text-slate-200" />
+          <Badge
+            key={platform}
+            label={platform}
+            colorClasses="bg-slate-100 text-slate-700 dark:bg-slate-800/70 dark:text-slate-100"
+          />
         ))}
       </div>
     </div>
@@ -1177,10 +1182,10 @@ function TodayFocusCard({ idea }: { idea: Idea }) {
 
 function StreakCard({ streak }: { streak: Streak }) {
   return (
-    <div className="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-amber-50 p-4 shadow-sm backdrop-blur dark:border-amber-500/30 dark:from-amber-900/40 dark:via-orange-900/30 dark:to-amber-800/40">
-      <p className="text-sm font-semibold text-amber-800 dark:text-amber-100">Idea streak</p>
-      <p className="text-3xl font-bold text-amber-900 dark:text-amber-50 mt-1">{streak.currentStreak} day{streak.currentStreak === 1 ? "" : "s"} 🔥</p>
-      <p className="text-xs text-amber-800 dark:text-amber-100 mt-1">Keep adding ideas daily to keep the fire going.</p>
+    <div className="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-amber-50 p-4 shadow-sm backdrop-blur dark:border-amber-500/40 dark:from-amber-900/40 dark:via-orange-900/30 dark:to-amber-800/40">
+      <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">Idea streak</p>
+      <p className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{streak.currentStreak} day{streak.currentStreak === 1 ? "" : "s"} 🔥</p>
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-200">Keep adding ideas daily to keep the fire going.</p>
     </div>
   );
 }
@@ -1274,39 +1279,7 @@ export default function HomePage() {
       <div className="pointer-events-none absolute right-[-120px] top-32 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl dark:bg-purple-600/20" />
 
       <main className="relative mx-auto max-w-6xl space-y-6 px-4">
-        <header className="flex flex-col gap-4 rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-lg backdrop-blur-lg dark:border-slate-800/60 dark:bg-slate-900/70">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="pointer-events-none absolute -left-3 -top-3 h-12 w-12 rounded-full bg-sky-400/30 blur-2xl dark:bg-sky-500/40" />
-                <Logo size={52} />
-              </div>
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-50">Creator Brain Inbox</p>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Capture, sort, and play with your ideas.</h1>
-                <p className="text-sm text-slate-600 dark:text-slate-300">Keep your inbox organized, focus on the right work, and revisit saved inspiration anytime.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/saved-ideas"
-              className="inline-flex items-center gap-2 rounded-full bg-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-violet-600 hover:shadow-xl dark:bg-violet-500 dark:hover:bg-violet-600"
-            >
-              View saved ideas
-            </Link>
-            <button
-              type="button"
-              onClick={() => openHelper()}
-              className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-purple-500/40 dark:bg-purple-500/10 dark:text-purple-100"
-            >
-              Open Helper
-            </button>
-          </div>
-        </header>
+        <HeroHeader onOpenHelper={() => openHelper()} />
 
         {/* Mobile: focus + streak */}
         <div className="space-y-3 md:hidden">
@@ -1314,10 +1287,10 @@ export default function HomePage() {
             <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Today&apos;s Focus</h3>
-                <span className="text-xs text-slate-500 dark:text-slate-400">Top 3</span>
+                <span className="text-xs text-slate-500 dark:text-slate-300">Top 3</span>
               </div>
               {focusIdeas.length === 0 ? (
-                <p className="text-sm text-slate-600 dark:text-slate-300">No focus ideas yet — move something to Ready or Drafting.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-200">No focus ideas yet — move something to Ready or Drafting.</p>
               ) : (
                 <div className="space-y-2">
                   {focusIdeas.map((idea) => (
@@ -1396,7 +1369,7 @@ export default function HomePage() {
             <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Ideas</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Drag between columns to update status</p>
+                <p className="text-sm text-slate-500 dark:text-slate-300">Drag between columns to update status</p>
               </div>
               <IdeaBoard ideas={filteredIdeas} onMoveIdea={moveIdea} onAskHelper={openHelper} />
             </div>
@@ -1406,10 +1379,10 @@ export default function HomePage() {
             <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Today&apos;s Focus</h3>
-                <span className="text-xs text-slate-500 dark:text-slate-400">Top 3</span>
+                <span className="text-xs text-slate-500 dark:text-slate-300">Top 3</span>
               </div>
               {focusIdeas.length === 0 ? (
-                <p className="text-sm text-slate-600 dark:text-slate-300">No focus ideas yet — move something to Ready or Drafting.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-200">No focus ideas yet — move something to Ready or Drafting.</p>
               ) : (
                 <div className="space-y-2">
                   {focusIdeas.map((idea) => (
