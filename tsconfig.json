@@ -15,7 +15,8 @@
     "jsx": "preserve",
     "incremental": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "next-themes": ["./app/lib/next-themes"]
     },
     "plugins": [
       {
