@@ -1,47 +1,24 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-
-type Platform = "X" | "LinkedIn" | "Instagram" | "YouTube" | "Newsletter";
-type ContentType = "hook" | "thread" | "carousel" | "email" | "script" | "other";
-type EnergyLevel = 1 | 2 | 3 | 4 | 5;
-type IdeaStatus = "Inbox" | "Ready" | "Drafting" | "Posted";
-type NextAction = "brain_dump" | "outline" | "publish";
-
-type AttachmentType = "image" | "video" | "audio" | "document" | "other";
-
-type Attachment = {
-  id: string;
-  type: AttachmentType;
-  name: string;
-  size: number;
-  mimeType: string;
-  dataUrl?: string;
-};
-
-type Idea = {
-  id: string;
-  text: string;
-  platforms: Platform[];
-  contentType: ContentType;
-  energy: EnergyLevel;
-  status: IdeaStatus;
-  nextAction: NextAction;
-  createdAt: string;
-  attachments?: Attachment[];
-  referenceTweets?: string[];
-};
-
-type Filters = {
-  platforms: Platform[];
-  statuses: IdeaStatus[];
-  timeframe: "today" | "week" | "someday" | null;
-};
-
-type Streak = {
-  currentStreak: number;
-  lastIdeaDate: string | null; // YYYY-MM-DD
-};
+import Logo from "./components/Logo";
+import { ThemeToggle } from "./components/ThemeToggle";
+import { TiltCard } from "./components/TiltCard";
+import { useSavedIdeas } from "./hooks/useSavedIdeas";
+import type {
+  Attachment,
+  AttachmentType,
+  ContentType,
+  EnergyLevel,
+  Filters,
+  Idea,
+  IdeaStatus,
+  NextAction,
+  Platform,
+  Streak,
+} from "./types/ideas";
 
 type ContentHelperMode =
   | "polish"
@@ -52,6 +29,7 @@ type ContentHelperMode =
 
 const STORAGE_KEY = "creator-brain-inbox-v1";
 const MAX_INLINE_ATTACHMENT_SIZE = 5 * 1024 * 1024; // 5MB
+const STREAK_STORAGE_KEY = "creator-brain-streak";
 
 const PLATFORM_OPTIONS: Platform[] = [
   "X",
@@ -90,60 +68,6 @@ function formatDate(dateString: string) {
 
 function getISODate(date: Date) {
   return date.toISOString().slice(0, 10);
-}
-
-function getSeedIdeas(): Idea[] {
-  const now = new Date();
-  return [
-    {
-      id: "seed-1",
-      text: "Summarize my top 3 growth lessons from 2024 as a punchy carousel.",
-      platforms: ["LinkedIn", "Instagram"],
-      contentType: "carousel",
-      energy: 3,
-      status: "Inbox",
-      nextAction: "outline",
-      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 24).toISOString(),
-      attachments: [],
-      referenceTweets: [],
-    },
-    {
-      id: "seed-2",
-      text: "Thread on repurposing YouTube scripts into newsletters without sounding robotic.",
-      platforms: ["X", "Newsletter", "YouTube"],
-      contentType: "thread",
-      energy: 4,
-      status: "Ready",
-      nextAction: "publish",
-      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 48).toISOString(),
-      attachments: [],
-      referenceTweets: [],
-    },
-    {
-      id: "seed-3",
-      text: "Write an honest email about balancing creative sprints with rest days.",
-      platforms: ["Newsletter"],
-      contentType: "email",
-      energy: 2,
-      status: "Drafting",
-      nextAction: "outline",
-      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 72).toISOString(),
-      attachments: [],
-      referenceTweets: [],
-    },
-    {
-      id: "seed-4",
-      text: "Short YouTube script: behind-the-scenes of building a one-person media lab.",
-      platforms: ["YouTube"],
-      contentType: "script",
-      energy: 5,
-      status: "Inbox",
-      nextAction: "brain_dump",
-      createdAt: now.toISOString(),
-      attachments: [],
-      referenceTweets: [],
-    },
-  ];
 }
 
 function timeframeMatches(timeframe: Filters["timeframe"], createdAt: string) {
@@ -194,13 +118,13 @@ function filterIdeas(ideas: Idea[], filters: Filters) {
 function getNextActionColor(action: NextAction) {
   switch (action) {
     case "brain_dump":
-      return "bg-slate-200 text-slate-800";
+      return "bg-slate-200 text-slate-800 dark:text-slate-100";
     case "outline":
       return "bg-blue-100 text-blue-700";
     case "publish":
       return "bg-green-100 text-green-700";
   }
-  return "bg-slate-100 text-slate-700";
+  return "bg-slate-100 text-slate-700 dark:text-slate-200";
 }
 
 function inferAttachmentType(mimeType: string): AttachmentType {
@@ -224,14 +148,6 @@ function readFileAsDataURL(file: File) {
     reader.onerror = (error) => reject(error);
     reader.readAsDataURL(file);
   });
-}
-
-function normalizeIdea(idea: Idea): Idea {
-  return {
-    ...idea,
-    attachments: idea.attachments ?? [],
-    referenceTweets: idea.referenceTweets ?? [],
-  };
 }
 
 function Badge({ label, colorClasses }: { label: string; colorClasses: string }) {
@@ -258,9 +174,9 @@ function FilterPanel({
   onClear: () => void;
 }) {
   return (
-    <div className="space-y-4 rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
+    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">Filters</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Filters</h3>
         <button
           className="text-sm text-blue-600 hover:text-blue-700"
           onClick={onClear}
@@ -271,7 +187,7 @@ function FilterPanel({
       </div>
 
       <div className="space-y-3">
-        <p className="text-sm font-medium text-slate-700">Platforms</p>
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Platforms</p>
         <div className="flex flex-wrap gap-2">
           {PLATFORM_OPTIONS.map((platform) => {
             const active = filters.platforms.includes(platform);
@@ -283,7 +199,7 @@ function FilterPanel({
                 className={`rounded-full border px-3 py-1 text-sm transition ${
                   active
                     ? "border-blue-500 bg-blue-50 text-blue-700"
-                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300"
+                    : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
                 }`}
               >
                 {platform}
@@ -294,7 +210,7 @@ function FilterPanel({
       </div>
 
       <div className="space-y-3">
-        <p className="text-sm font-medium text-slate-700">Status</p>
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Status</p>
         <div className="flex flex-wrap gap-2">
           {STATUS_COLUMNS.map((status) => {
             const active = filters.statuses.includes(status);
@@ -306,7 +222,7 @@ function FilterPanel({
                 className={`rounded-full border px-3 py-1 text-sm transition ${
                   active
                     ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300"
+                    : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
                 }`}
               >
                 {status}
@@ -317,7 +233,7 @@ function FilterPanel({
       </div>
 
       <div className="space-y-3">
-        <p className="text-sm font-medium text-slate-700">Timeframe</p>
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Timeframe</p>
         <div className="flex flex-wrap gap-2">
           {(
             [
@@ -337,7 +253,7 @@ function FilterPanel({
                 className={`rounded-full border px-3 py-1 text-sm transition ${
                   active
                     ? "border-purple-500 bg-purple-50 text-purple-700"
-                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300"
+                    : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
                 }`}
               >
                 {label}
@@ -364,7 +280,7 @@ function AttachmentStrip({
     <button
       type="button"
       onClick={onOpen}
-      className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 shadow-sm hover:border-blue-200 hover:bg-blue-50"
+      className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 dark:text-slate-200 shadow-sm hover:border-blue-200 hover:bg-blue-50"
     >
       {preview.map((attachment) => (
         <div
@@ -372,13 +288,16 @@ function AttachmentStrip({
           className="flex items-center gap-1 rounded-md bg-white px-2 py-1 shadow-inner"
         >
           {attachment.type === "image" && attachment.dataUrl ? (
-            <img
+            <Image
               src={attachment.dataUrl}
               alt={attachment.name}
+              width={40}
+              height={40}
+              unoptimized
               className="h-10 w-10 rounded object-cover"
             />
           ) : (
-            <span className="text-[11px] font-semibold text-slate-600">
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               {attachment.type === "document"
                 ? "DOC"
                 : attachment.type === "video"
@@ -388,13 +307,13 @@ function AttachmentStrip({
                     : "FILE"}
             </span>
           )}
-          <span className="text-[11px] text-slate-600 truncate max-w-[80px]">
+          <span className="text-[11px] text-slate-600 dark:text-slate-300 truncate max-w-[80px]">
             {attachment.name}
           </span>
         </div>
       ))}
       {remaining > 0 && (
-        <span className="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 shadow-inner">
+        <span className="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200 shadow-inner">
           +{remaining}
         </span>
       )}
@@ -417,11 +336,11 @@ function AttachmentModal({
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 p-4">
       <div className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">Attachments</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Attachments</h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700 hover:bg-slate-200"
+            className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-200"
           >
             Close
           </button>
@@ -432,19 +351,22 @@ function AttachmentModal({
               key={attachment.id}
               className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm"
             >
-              <p className="text-sm font-semibold text-slate-800 truncate">{attachment.name}</p>
-              <p className="text-xs text-slate-500">
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{attachment.name}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {attachment.type.toUpperCase()} • {(attachment.size / 1024).toFixed(0)} KB
               </p>
               {attachment.type === "image" && attachment.dataUrl ? (
-                <img
+                <Image
                   src={attachment.dataUrl}
                   alt={attachment.name}
+                  width={800}
+                  height={600}
+                  unoptimized
                   className="mt-2 w-full rounded-lg object-cover"
                 />
               ) : (
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-xs text-slate-600">{attachment.mimeType}</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-300">{attachment.mimeType}</span>
                   {attachment.dataUrl ? (
                     <a
                       href={attachment.dataUrl}
@@ -592,13 +514,13 @@ const response = await fetch("/api/helper", {
       <div className="w-full max-w-3xl rounded-2xl bg-white p-5 shadow-2xl">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-xl font-semibold text-slate-900">Content Helper</h3>
-            <p className="text-sm text-slate-600">AI-powered assistance for polishing your idea.</p>
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Content Helper</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300">AI-powered assistance for polishing your idea.</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700 hover:bg-slate-200"
+            className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-200"
           >
             Close
           </button>
@@ -606,7 +528,7 @@ const response = await fetch("/api/helper", {
 
         <div className="mt-4 grid gap-4 md:grid-cols-[1fr,1fr]">
           <div className="space-y-3">
-            <label className="text-sm font-medium text-slate-700">Mode</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Mode</label>
             <div className="flex flex-wrap gap-2">
               {[
                 { label: "Polish this post", value: "polish" },
@@ -622,7 +544,7 @@ const response = await fetch("/api/helper", {
                   className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                     mode === option.value
                       ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300"
+                      : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
                   }`}
                 >
                   {option.label}
@@ -631,7 +553,7 @@ const response = await fetch("/api/helper", {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Idea text</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Idea text</label>
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -642,7 +564,7 @@ const response = await fetch("/api/helper", {
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-700">Platforms</p>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Platforms</p>
               <div className="flex flex-wrap gap-2">
                 {HELPER_PLATFORM_OPTIONS.map((platform) => {
                   const active = platforms.includes(platform);
@@ -654,7 +576,7 @@ const response = await fetch("/api/helper", {
                       className={`rounded-full border px-3 py-1 text-sm transition ${
                         active
                           ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300"
+                          : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
                       }`}
                     >
                       {platform}
@@ -664,7 +586,7 @@ const response = await fetch("/api/helper", {
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-xs font-medium text-slate-700">
+            <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-200">
               <input
                 type="checkbox"
                 checked={includeReferences}
@@ -678,7 +600,7 @@ const response = await fetch("/api/helper", {
           <div className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Content type</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-200">Content type</label>
                 <select
                   value={contentType}
                   onChange={(e) => setContentType(e.target.value as ContentType)}
@@ -692,7 +614,7 @@ const response = await fetch("/api/helper", {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Energy</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-200">Energy</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="range"
@@ -702,7 +624,7 @@ const response = await fetch("/api/helper", {
                     onChange={(e) => setEnergy(Number(e.target.value) as EnergyLevel)}
                     className="flex-1"
                   />
-                  <span className="text-xs font-semibold text-slate-800">⚡{energy}</span>
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-100">⚡{energy}</span>
                 </div>
               </div>
             </div>
@@ -719,8 +641,8 @@ const response = await fetch("/api/helper", {
             {error && <p className="text-sm text-amber-600">{error}</p>}
 
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-800">Suggestion</p>
-              <div className="min-h-[160px] rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 whitespace-pre-wrap">
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Suggestion</p>
+              <div className="min-h-[160px] rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 dark:text-slate-100 whitespace-pre-wrap">
                 {suggestion || "No suggestion yet."}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -728,7 +650,7 @@ const response = await fetch("/api/helper", {
                   type="button"
                   onClick={handleCopy}
                   disabled={!suggestion}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm hover:border-slate-300 disabled:opacity-50"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:border-slate-300 disabled:opacity-50"
                 >
                   Copy suggestion
                 </button>
@@ -855,13 +777,13 @@ function AddIdeaForm({
   };
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+    <div className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-slate-900">Add Idea</h2>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Add Idea</h2>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Idea</label>
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Idea</label>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -872,7 +794,7 @@ function AddIdeaForm({
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-700">Platforms</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Platforms</p>
           <div className="flex flex-wrap gap-2">
             {PLATFORM_OPTIONS.map((platform) => {
               const active = platforms.includes(platform);
@@ -884,7 +806,7 @@ function AddIdeaForm({
                   className={`rounded-full border px-3 py-1 text-sm transition ${
                     active
                       ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300"
+                      : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
                   }`}
                 >
                   {platform}
@@ -896,7 +818,7 @@ function AddIdeaForm({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Content type</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Content type</label>
             <select
               value={contentType}
               onChange={(e) => setContentType(e.target.value as ContentType)}
@@ -911,7 +833,7 @@ function AddIdeaForm({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Energy</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Energy</label>
             <div className="flex items-center gap-3">
               <input
                 type="range"
@@ -921,14 +843,14 @@ function AddIdeaForm({
                 onChange={(e) => setEnergy(Number(e.target.value) as EnergyLevel)}
                 className="flex-1"
               />
-              <span className="text-sm font-semibold text-slate-800">⚡{energy}</span>
+              <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">⚡{energy}</span>
             </div>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Status</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as IdeaStatus)}
@@ -943,7 +865,7 @@ function AddIdeaForm({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Next action</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Next action</label>
             <select
               value={nextAction}
               onChange={(e) => setNextAction(e.target.value as NextAction)}
@@ -958,7 +880,7 @@ function AddIdeaForm({
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-700">Attachments</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Attachments</p>
             <input
               type="file"
               multiple
@@ -984,8 +906,8 @@ function AddIdeaForm({
               void handleFiles(e.dataTransfer.files);
             }}
           >
-            <p className="text-slate-700">Drag and drop files here, or use the picker.</p>
-            <p className="text-xs text-slate-500">Up to 5MB per file for inline previews.</p>
+            <p className="text-slate-700 dark:text-slate-200">Drag and drop files here, or use the picker.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Up to 5MB per file for inline previews.</p>
           </div>
           {attachments.length > 0 && (
             <div className="grid gap-2 sm:grid-cols-2">
@@ -995,13 +917,16 @@ function AddIdeaForm({
                   className="relative flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
                 >
                   {attachment.type === "image" && attachment.dataUrl ? (
-                    <img
+                    <Image
                       src={attachment.dataUrl}
                       alt={attachment.name}
+                      width={48}
+                      height={48}
+                      unoptimized
                       className="h-12 w-12 rounded object-cover"
                     />
                   ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-600">
+                    <div className="flex h-12 w-12 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-600 dark:text-slate-300">
                       {attachment.type === "document"
                         ? "DOC"
                         : attachment.type === "video"
@@ -1012,8 +937,8 @@ function AddIdeaForm({
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-800 truncate">{attachment.name}</p>
-                    <p className="text-xs text-slate-500">{(attachment.size / 1024).toFixed(0)} KB</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{attachment.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{(attachment.size / 1024).toFixed(0)} KB</p>
                     {!attachment.dataUrl && attachment.size > MAX_INLINE_ATTACHMENT_SIZE && (
                       <p className="text-[11px] text-amber-600">Too large for inline preview; metadata saved only.</p>
                     )}
@@ -1023,7 +948,7 @@ function AddIdeaForm({
                     onClick={() =>
                       setAttachments((prev) => prev.filter((item) => item.id !== attachment.id))
                     }
-                    className="absolute right-2 top-2 rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600 hover:bg-slate-200"
+                    className="absolute right-2 top-2 rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-200"
                   >
                     ×
                   </button>
@@ -1034,7 +959,7 @@ function AddIdeaForm({
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-700">Reference tweets (optional)</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Reference tweets (optional)</p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
               type="url"
@@ -1057,7 +982,7 @@ function AddIdeaForm({
               {referenceTweets.map((link, index) => (
                 <span
                   key={link}
-                  className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700"
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700 dark:text-slate-200"
                 >
                   {`Tweet ${index + 1}`}
                   <button
@@ -1065,7 +990,7 @@ function AddIdeaForm({
                     onClick={() =>
                       setReferenceTweets((prev) => prev.filter((item) => item !== link))
                     }
-                    className="text-slate-500 hover:text-slate-700"
+                    className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
                   >
                     ×
                   </button>
@@ -1092,32 +1017,32 @@ function IdeaCard({ idea, onAskHelper }: { idea: Idea; onAskHelper: (idea: Idea)
   const [showAttachments, setShowAttachments] = useState(false);
 
   return (
-    <div
+    <TiltCard
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", idea.id);
         e.dataTransfer.effectAllowed = "move";
       }}
-      className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-blue-200 hover:shadow-md"
+      className="border border-slate-200/80 bg-white/90 p-3 shadow-sm hover:border-blue-200 dark:border-slate-800 dark:bg-slate-900/80"
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm text-slate-900 mb-3 break-words overflow-hidden flex-1">
+        <p className="text-sm text-slate-900 dark:text-slate-100 mb-3 break-words overflow-hidden flex-1">
           {idea.text}
         </p>
         <button
           type="button"
           onClick={() => onAskHelper(idea)}
-          className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-100"
+          className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-100 dark:hover:bg-blue-500/20"
         >
           Ask Helper
         </button>
       </div>
-      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
         {idea.platforms.map((platform) => (
           <Badge
             key={platform}
             label={platform}
-            colorClasses="bg-slate-100 text-slate-700"
+            colorClasses="bg-slate-100 text-slate-700 dark:text-slate-200"
           />
         ))}
         <Badge
@@ -1127,7 +1052,7 @@ function IdeaCard({ idea, onAskHelper }: { idea: Idea; onAskHelper: (idea: Idea)
         <Badge label={`⚡${idea.energy}`} colorClasses="bg-indigo-100 text-indigo-700" />
         <Badge label={NEXT_ACTION_LABELS[idea.nextAction]} colorClasses={getNextActionColor(idea.nextAction)} />
       </div>
-      <p className="mt-2 text-[11px] text-slate-500">Created {formatDate(idea.createdAt)}</p>
+      <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">Created {formatDate(idea.createdAt)}</p>
 
       {idea.attachments && idea.attachments.length > 0 && (
         <AttachmentStrip attachments={idea.attachments} onOpen={() => setShowAttachments(true)} />
@@ -1135,7 +1060,7 @@ function IdeaCard({ idea, onAskHelper }: { idea: Idea; onAskHelper: (idea: Idea)
 
       {idea.referenceTweets && idea.referenceTweets.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-          <span className="font-semibold text-slate-700">References:</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-200">References:</span>
           {idea.referenceTweets.map((link, index) => (
             <a
               key={link}
@@ -1155,7 +1080,7 @@ function IdeaCard({ idea, onAskHelper }: { idea: Idea; onAskHelper: (idea: Idea)
         attachments={idea.attachments ?? []}
         onClose={() => setShowAttachments(false)}
       />
-    </div>
+    </TiltCard>
   );
 }
 
@@ -1188,17 +1113,19 @@ function IdeaColumn({
         setIsOver(false);
       }}
       className={`flex min-h-[120px] flex-col gap-3 rounded-2xl border p-3 transition ${
-        isOver ? "border-blue-400 bg-blue-50/40" : "border-slate-200 bg-slate-50"
+        isOver
+          ? "border-blue-400 bg-blue-50/40 dark:border-blue-400 dark:bg-blue-500/10"
+          : "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/60"
       }`}
     >
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-800">{status}</p>
-        <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 shadow-sm">
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{status}</p>
+        <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 dark:text-slate-300 shadow-sm">
           {ideas.length}
         </span>
       </div>
       {ideas.length === 0 ? (
-        <p className="text-xs text-slate-500">Drop an idea here</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Drop an idea here</p>
       ) : (
         ideas.map((idea) => <IdeaCard key={idea.id} idea={idea} onAskHelper={onAskHelper} />)
       )}
@@ -1233,15 +1160,15 @@ function IdeaBoard({
 function TodayFocusCard({ idea }: { idea: Idea }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-      <p className="text-sm text-slate-900 break-words overflow-hidden">{idea.text}</p>
-      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+      <p className="text-sm text-slate-900 dark:text-slate-100 break-words overflow-hidden">{idea.text}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
         <Badge label={`⚡${idea.energy}`} colorClasses="bg-indigo-100 text-indigo-700" />
         <Badge
           label={CONTENT_TYPES.find((c) => c.value === idea.contentType)?.label ?? idea.contentType}
           colorClasses="bg-amber-100 text-amber-700"
         />
         {idea.platforms.slice(0, 3).map((platform) => (
-          <Badge key={platform} label={platform} colorClasses="bg-slate-100 text-slate-700" />
+          <Badge key={platform} label={platform} colorClasses="bg-slate-100 text-slate-700 dark:text-slate-200" />
         ))}
       </div>
     </div>
@@ -1250,17 +1177,16 @@ function TodayFocusCard({ idea }: { idea: Idea }) {
 
 function StreakCard({ streak }: { streak: Streak }) {
   return (
-    <div className="rounded-2xl bg-gradient-to-r from-amber-100 via-orange-100 to-amber-50 p-4 shadow-sm border border-amber-200">
-      <p className="text-sm font-semibold text-amber-800">Idea streak</p>
-      <p className="text-3xl font-bold text-amber-900 mt-1">{streak.currentStreak} day{streak.currentStreak === 1 ? "" : "s"} 🔥</p>
-      <p className="text-xs text-amber-800 mt-1">Keep adding ideas daily to keep the fire going.</p>
+    <div className="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-amber-50 p-4 shadow-sm backdrop-blur dark:border-amber-500/30 dark:from-amber-900/40 dark:via-orange-900/30 dark:to-amber-800/40">
+      <p className="text-sm font-semibold text-amber-800 dark:text-amber-100">Idea streak</p>
+      <p className="text-3xl font-bold text-amber-900 dark:text-amber-50 mt-1">{streak.currentStreak} day{streak.currentStreak === 1 ? "" : "s"} 🔥</p>
+      <p className="text-xs text-amber-800 dark:text-amber-100 mt-1">Keep adding ideas daily to keep the fire going.</p>
     </div>
   );
 }
 
 export default function HomePage() {
-  const [isClient, setIsClient] = useState(false);
-  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const { savedIdeas: ideas, saveIdea } = useSavedIdeas();
   const [filters, setFilters] = useState<Filters>({ platforms: [], statuses: [], timeframe: null });
   const [streak, setStreak] = useState<Streak>({ currentStreak: 0, lastIdeaDate: null });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -1268,37 +1194,25 @@ export default function HomePage() {
   const [activeIdeaId, setActiveIdeaId] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsClient(true);
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = typeof window !== "undefined" ? localStorage.getItem(STREAK_STORAGE_KEY) : null;
       if (stored) {
-        const parsed = JSON.parse(stored) as { ideas?: Idea[]; streak?: Streak };
-        const hydratedIdeas = parsed.ideas && parsed.ideas.length > 0
-          ? parsed.ideas.map(normalizeIdea)
-          : getSeedIdeas();
-        setIdeas(hydratedIdeas);
-        if (parsed.streak) {
-          setStreak(parsed.streak);
-        } else {
-          setStreak({ currentStreak: 0, lastIdeaDate: null });
-        }
-      } else {
-        setIdeas(getSeedIdeas());
+        const parsed = JSON.parse(stored) as Streak;
+        setStreak(parsed);
       }
     } catch (error) {
-      console.error("Failed to load from storage", error);
-      setIdeas(getSeedIdeas());
+      console.error("Failed to load streak", error);
     }
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (typeof window === "undefined") return;
     const handler = setTimeout(() => {
-      const payload = JSON.stringify({ ideas, streak });
-      localStorage.setItem(STORAGE_KEY, payload);
+      const payload = JSON.stringify(streak);
+      localStorage.setItem(STREAK_STORAGE_KEY, payload);
     }, 300);
     return () => clearTimeout(handler);
-  }, [ideas, streak, isClient]);
+  }, [streak]);
 
   const addIdea = (ideaInput: Omit<Idea, "id" | "createdAt">) => {
     const now = new Date();
@@ -1312,7 +1226,7 @@ export default function HomePage() {
       referenceTweets: ideaInput.referenceTweets ?? [],
     };
 
-    setIdeas((prev) => [newIdea, ...prev]);
+    saveIdea(newIdea);
 
     setStreak((prev) => {
       if (prev.lastIdeaDate === dateKey) return prev;
@@ -1325,11 +1239,15 @@ export default function HomePage() {
   };
 
   const moveIdea = (id: string, status: IdeaStatus) => {
-    setIdeas((prev) => prev.map((idea) => (idea.id === id ? { ...idea, status } : idea)));
+    const idea = ideas.find((entry) => entry.id === id);
+    if (!idea) return;
+    saveIdea({ ...idea, status });
   };
 
   const updateIdeaText = (id: string, text: string) => {
-    setIdeas((prev) => prev.map((idea) => (idea.id === id ? { ...idea, text } : idea)));
+    const idea = ideas.find((entry) => entry.id === id);
+    if (!idea) return;
+    saveIdea({ ...idea, text });
   };
 
   const filteredIdeas = useMemo(() => filterIdeas(ideas, filters), [ideas, filters]);
@@ -1351,138 +1269,167 @@ export default function HomePage() {
   const activeIdea = ideas.find((idea) => idea.id === activeIdeaId);
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={() => openHelper()}
-          className="rounded-full bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-700 shadow-sm transition hover:bg-purple-100"
-        >
-          Open Helper
-        </button>
-      </div>
+    <div className="relative overflow-hidden bg-gradient-to-br from-slate-100 via-white to-sky-100/60 px-0 py-8 dark:from-slate-950 dark:via-slate-900 dark:to-sky-900/40">
+      <div className="pointer-events-none absolute left-8 top-10 h-48 w-48 -translate-x-1/2 rounded-full bg-sky-500/30 blur-3xl dark:bg-sky-500/40" />
+      <div className="pointer-events-none absolute right-[-120px] top-32 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl dark:bg-purple-600/20" />
 
-      {/* Mobile: focus + streak */}
-      <div className="md:hidden space-y-3">
-        <div className="flex flex-col gap-3">
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-slate-900">Today&apos;s Focus</h3>
-              <span className="text-xs text-slate-500">Top 3</span>
-            </div>
-            {focusIdeas.length === 0 ? (
-              <p className="text-sm text-slate-600">No focus ideas yet — move something to Ready or Drafting.</p>
-            ) : (
-              <div className="space-y-2">
-                {focusIdeas.map((idea) => (
-                  <TodayFocusCard key={idea.id} idea={idea} />
-                ))}
+      <main className="relative mx-auto max-w-6xl space-y-6 px-4">
+        <header className="flex flex-col gap-4 rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-lg backdrop-blur-lg dark:border-slate-800/60 dark:bg-slate-900/70">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="pointer-events-none absolute -left-3 -top-3 h-12 w-12 rounded-full bg-sky-400/30 blur-2xl dark:bg-sky-500/40" />
+                <Logo size={52} />
               </div>
-            )}
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Creator Brain Inbox</p>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Capture, sort, and play with your ideas.</h1>
+                <p className="text-sm text-slate-600 dark:text-slate-300">Keep your inbox organized, focus on the right work, and revisit saved inspiration anytime.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+            </div>
           </div>
-          <StreakCard streak={streak} />
-        </div>
-      </div>
-
-      {/* Desktop grid */}
-      <div className="grid gap-6 md:grid-cols-[260px,minmax(0,1fr),280px]">
-        <div className="hidden md:block">
-          <FilterPanel
-            filters={filters}
-            onTogglePlatform={(platform) =>
-              setFilters((prev) => ({
-                ...prev,
-                platforms: prev.platforms.includes(platform)
-                  ? prev.platforms.filter((p) => p !== platform)
-                  : [...prev.platforms, platform],
-              }))
-            }
-            onToggleStatus={(status) =>
-              setFilters((prev) => ({
-                ...prev,
-                statuses: prev.statuses.includes(status)
-                  ? prev.statuses.filter((s) => s !== status)
-                  : [...prev.statuses, status],
-              }))
-            }
-            onSelectTimeframe={(timeframe) => setFilters((prev) => ({ ...prev, timeframe }))}
-            onClear={clearFilters}
-          />
-        </div>
-
-        <div className="space-y-4">
-          <AddIdeaForm onAddIdea={addIdea} />
-
-          {/* Mobile filters trigger */}
-          <div className="md:hidden">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/saved-ideas"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-purple-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl"
+            >
+              View saved ideas
+            </Link>
             <button
               type="button"
-              onClick={() => setShowMobileFilters((prev) => !prev)}
-              className="mb-3 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm border border-slate-200"
+              onClick={() => openHelper()}
+              className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-purple-500/40 dark:bg-purple-500/10 dark:text-purple-100"
             >
-              {showMobileFilters ? "Hide filters" : "Show filters"}
+              Open Helper
             </button>
-            {showMobileFilters && (
-              <FilterPanel
-                filters={filters}
-                onTogglePlatform={(platform) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    platforms: prev.platforms.includes(platform)
-                      ? prev.platforms.filter((p) => p !== platform)
-                      : [...prev.platforms, platform],
-                  }))
-                }
-                onToggleStatus={(status) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    statuses: prev.statuses.includes(status)
-                      ? prev.statuses.filter((s) => s !== status)
-                      : [...prev.statuses, status],
-                  }))
-                }
-                onSelectTimeframe={(timeframe) => setFilters((prev) => ({ ...prev, timeframe }))}
-                onClear={clearFilters}
-              />
-            )}
           </div>
+        </header>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Ideas</h3>
-              <p className="text-sm text-slate-500">Drag between columns to update status</p>
-            </div>
-            <IdeaBoard ideas={filteredIdeas} onMoveIdea={moveIdea} onAskHelper={openHelper} />
-          </div>
-        </div>
-
-        <div className="hidden space-y-4 md:block">
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-slate-900">Today&apos;s Focus</h3>
-              <span className="text-xs text-slate-500">Top 3</span>
-            </div>
-            {focusIdeas.length === 0 ? (
-              <p className="text-sm text-slate-600">No focus ideas yet — move something to Ready or Drafting.</p>
-            ) : (
-              <div className="space-y-2">
-                {focusIdeas.map((idea) => (
-                  <TodayFocusCard key={idea.id} idea={idea} />
-                ))}
+        {/* Mobile: focus + streak */}
+        <div className="space-y-3 md:hidden">
+          <div className="flex flex-col gap-3">
+            <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Today&apos;s Focus</h3>
+                <span className="text-xs text-slate-500 dark:text-slate-400">Top 3</span>
               </div>
-            )}
+              {focusIdeas.length === 0 ? (
+                <p className="text-sm text-slate-600 dark:text-slate-300">No focus ideas yet — move something to Ready or Drafting.</p>
+              ) : (
+                <div className="space-y-2">
+                  {focusIdeas.map((idea) => (
+                    <TodayFocusCard key={idea.id} idea={idea} />
+                  ))}
+                </div>
+              )}
+            </div>
+            <StreakCard streak={streak} />
           </div>
-          <StreakCard streak={streak} />
         </div>
-      </div>
 
-      <ContentHelperModal
-        isOpen={helperOpen}
-        onClose={() => setHelperOpen(false)}
-        seedIdea={activeIdea}
-        onSaveIdea={addIdea}
-        onReplaceIdea={updateIdeaText}
-      />
-    </main>
+        {/* Desktop grid */}
+        <div className="grid gap-6 md:grid-cols-[260px,minmax(0,1fr),280px]">
+          <div className="hidden md:block">
+            <FilterPanel
+              filters={filters}
+              onTogglePlatform={(platform) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  platforms: prev.platforms.includes(platform)
+                    ? prev.platforms.filter((p) => p !== platform)
+                    : [...prev.platforms, platform],
+                }))
+              }
+              onToggleStatus={(status) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  statuses: prev.statuses.includes(status)
+                    ? prev.statuses.filter((s) => s !== status)
+                    : [...prev.statuses, status],
+                }))
+              }
+              onSelectTimeframe={(timeframe) => setFilters((prev) => ({ ...prev, timeframe }))}
+              onClear={clearFilters}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <AddIdeaForm onAddIdea={addIdea} />
+
+            {/* Mobile filters trigger */}
+            <div className="md:hidden">
+              <button
+                type="button"
+                onClick={() => setShowMobileFilters((prev) => !prev)}
+                className="mb-3 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-100 shadow-sm backdrop-blur"
+              >
+                {showMobileFilters ? "Hide filters" : "Show filters"}
+              </button>
+              {showMobileFilters && (
+                <FilterPanel
+                  filters={filters}
+                  onTogglePlatform={(platform) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      platforms: prev.platforms.includes(platform)
+                        ? prev.platforms.filter((p) => p !== platform)
+                        : [...prev.platforms, platform],
+                    }))
+                  }
+                  onToggleStatus={(status) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      statuses: prev.statuses.includes(status)
+                        ? prev.statuses.filter((s) => s !== status)
+                        : [...prev.statuses, status],
+                    }))
+                  }
+                  onSelectTimeframe={(timeframe) => setFilters((prev) => ({ ...prev, timeframe }))}
+                  onClear={clearFilters}
+                />
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Ideas</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Drag between columns to update status</p>
+              </div>
+              <IdeaBoard ideas={filteredIdeas} onMoveIdea={moveIdea} onAskHelper={openHelper} />
+            </div>
+          </div>
+
+          <div className="hidden space-y-4 md:block">
+            <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Today&apos;s Focus</h3>
+                <span className="text-xs text-slate-500 dark:text-slate-400">Top 3</span>
+              </div>
+              {focusIdeas.length === 0 ? (
+                <p className="text-sm text-slate-600 dark:text-slate-300">No focus ideas yet — move something to Ready or Drafting.</p>
+              ) : (
+                <div className="space-y-2">
+                  {focusIdeas.map((idea) => (
+                    <TodayFocusCard key={idea.id} idea={idea} />
+                  ))}
+                </div>
+              )}
+            </div>
+            <StreakCard streak={streak} />
+          </div>
+        </div>
+
+        <ContentHelperModal
+          isOpen={helperOpen}
+          onClose={() => setHelperOpen(false)}
+          seedIdea={activeIdea}
+          onSaveIdea={addIdea}
+          onReplaceIdea={updateIdeaText}
+        />
+      </main>
+    </div>
   );
 }
