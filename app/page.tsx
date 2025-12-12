@@ -173,10 +173,10 @@ function FilterPanel({
   onSelectTimeframe: (timeframe: Filters["timeframe"]) => void;
   onClear: () => void;
 }) {
-  return (
-    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Filters</h3>
+    return (
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Filters</h3>
         <button
           className="text-sm text-blue-600 hover:text-blue-700"
           onClick={onClear}
@@ -187,7 +187,7 @@ function FilterPanel({
       </div>
 
       <div className="space-y-3">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Platforms</p>
+        <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Platforms</p>
         <div className="flex flex-wrap gap-2">
           {PLATFORM_OPTIONS.map((platform) => {
             const active = filters.platforms.includes(platform);
@@ -198,8 +198,8 @@ function FilterPanel({
                 onClick={() => onTogglePlatform(platform)}
                 className={`rounded-full border px-3 py-1 text-sm transition ${
                   active
-                    ? "border-blue-500 bg-blue-50 text-blue-700"
-                    : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
+                    ? "border-sky-500 bg-sky-500 text-white dark:bg-sky-500 dark:text-white"
+                    : "border-slate-200 bg-slate-100 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-400"
                 }`}
               >
                 {platform}
@@ -210,7 +210,7 @@ function FilterPanel({
       </div>
 
       <div className="space-y-3">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Status</p>
+        <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Status</p>
         <div className="flex flex-wrap gap-2">
           {STATUS_COLUMNS.map((status) => {
             const active = filters.statuses.includes(status);
@@ -221,8 +221,8 @@ function FilterPanel({
                 onClick={() => onToggleStatus(status)}
                 className={`rounded-full border px-3 py-1 text-sm transition ${
                   active
-                    ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                    : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
+                    ? "border-sky-500 bg-sky-500 text-white dark:bg-sky-500 dark:text-white"
+                    : "border-slate-200 bg-slate-100 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-400"
                 }`}
               >
                 {status}
@@ -233,7 +233,7 @@ function FilterPanel({
       </div>
 
       <div className="space-y-3">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Timeframe</p>
+        <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Timeframe</p>
         <div className="flex flex-wrap gap-2">
           {(
             [
@@ -252,8 +252,8 @@ function FilterPanel({
                 }
                 className={`rounded-full border px-3 py-1 text-sm transition ${
                   active
-                    ? "border-purple-500 bg-purple-50 text-purple-700"
-                    : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
+                    ? "border-sky-500 bg-sky-500 text-white dark:bg-sky-500 dark:text-white"
+                    : "border-slate-200 bg-slate-100 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-400"
                 }`}
               >
                 {label}
@@ -336,7 +336,7 @@ function AttachmentModal({
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 p-4">
       <div className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Attachments</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Attachments</h3>
           <button
             type="button"
             onClick={onClose}
@@ -351,7 +351,7 @@ function AttachmentModal({
               key={attachment.id}
               className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm"
             >
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{attachment.name}</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate">{attachment.name}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {attachment.type.toUpperCase()} • {(attachment.size / 1024).toFixed(0)} KB
               </p>
@@ -511,10 +511,10 @@ const response = await fetch("/api/helper", {
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-3xl rounded-2xl bg-white p-5 shadow-2xl">
+      <div className="w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900/90">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Content Helper</h3>
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Content Helper</h3>
             <p className="text-sm text-slate-600 dark:text-slate-300">AI-powered assistance for polishing your idea.</p>
           </div>
           <button
@@ -528,7 +528,7 @@ const response = await fetch("/api/helper", {
 
         <div className="mt-4 grid gap-4 md:grid-cols-[1fr,1fr]">
           <div className="space-y-3">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Mode</label>
+            <label className="text-sm font-medium text-slate-900 dark:text-slate-50">Mode</label>
             <div className="flex flex-wrap gap-2">
               {[
                 { label: "Polish this post", value: "polish" },
@@ -543,8 +543,8 @@ const response = await fetch("/api/helper", {
                   onClick={() => setMode(option.value as ContentHelperMode)}
                   className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                     mode === option.value
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
+                      ? "border-sky-500 bg-sky-500 text-white dark:bg-sky-500 dark:text-white"
+                      : "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-100"
                   }`}
                 >
                   {option.label}
@@ -553,18 +553,18 @@ const response = await fetch("/api/helper", {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Idea text</label>
+              <label className="text-sm font-medium text-slate-900 dark:text-slate-50">Idea text</label>
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={5}
-                className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-50 dark:placeholder:text-slate-500"
                 placeholder="Paste your idea here"
               />
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Platforms</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-50">Platforms</p>
               <div className="flex flex-wrap gap-2">
                 {HELPER_PLATFORM_OPTIONS.map((platform) => {
                   const active = platforms.includes(platform);
@@ -575,8 +575,8 @@ const response = await fetch("/api/helper", {
                       onClick={() => togglePlatform(platform)}
                       className={`rounded-full border px-3 py-1 text-sm transition ${
                         active
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
+                          ? "border-sky-500 bg-sky-500 text-white dark:bg-sky-500 dark:text-white"
+                          : "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-100"
                       }`}
                     >
                       {platform}
@@ -586,7 +586,7 @@ const response = await fetch("/api/helper", {
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-200">
+            <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
               <input
                 type="checkbox"
                 checked={includeReferences}
@@ -600,11 +600,11 @@ const response = await fetch("/api/helper", {
           <div className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-200">Content type</label>
+                <label className="text-xs font-semibold text-slate-900 dark:text-slate-50">Content type</label>
                 <select
                   value={contentType}
                   onChange={(e) => setContentType(e.target.value as ContentType)}
-                  className="w-full rounded-xl border border-slate-300 bg-white p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white p-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-50"
                 >
                   {CONTENT_TYPES.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -614,7 +614,7 @@ const response = await fetch("/api/helper", {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-200">Energy</label>
+                <label className="text-xs font-semibold text-slate-900 dark:text-slate-50">Energy</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="range"
@@ -624,7 +624,7 @@ const response = await fetch("/api/helper", {
                     onChange={(e) => setEnergy(Number(e.target.value) as EnergyLevel)}
                     className="flex-1"
                   />
-                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-100">⚡{energy}</span>
+                  <span className="text-xs font-semibold text-slate-900 dark:text-slate-50">⚡{energy}</span>
                 </div>
               </div>
             </div>
@@ -641,8 +641,8 @@ const response = await fetch("/api/helper", {
             {error && <p className="text-sm text-amber-600">{error}</p>}
 
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Suggestion</p>
-              <div className="min-h-[160px] rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 dark:text-slate-100 whitespace-pre-wrap">
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">Suggestion</p>
+              <div className="min-h-[160px] rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-50 whitespace-pre-wrap">
                 {suggestion || "No suggestion yet."}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -650,7 +650,7 @@ const response = await fetch("/api/helper", {
                   type="button"
                   onClick={handleCopy}
                   disabled={!suggestion}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:border-slate-300 disabled:opacity-50"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100 shadow-sm hover:border-slate-300 disabled:opacity-50"
                 >
                   Copy suggestion
                 </button>
@@ -658,7 +658,7 @@ const response = await fetch("/api/helper", {
                   type="button"
                   onClick={handleSave}
                   disabled={!suggestion}
-                  className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 shadow-sm hover:border-blue-300 disabled:opacity-50"
+                  className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 shadow-sm hover:border-blue-300 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-100 disabled:opacity-50"
                 >
                   Save as new idea
                 </button>
@@ -667,7 +667,7 @@ const response = await fetch("/api/helper", {
                     type="button"
                     onClick={handleReplace}
                     disabled={!suggestion}
-                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm hover:border-emerald-300 disabled:opacity-50"
+                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm hover:border-emerald-300 dark:border-emerald-400 dark:bg-emerald-500/10 dark:text-emerald-100 disabled:opacity-50"
                   >
                     Replace idea text
                   </button>
@@ -779,22 +779,22 @@ function AddIdeaForm({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Add Idea</h2>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Add Idea</h2>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Idea</label>
+          <label className="text-sm font-medium text-slate-900 dark:text-slate-50">Idea</label>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-50 dark:placeholder:text-slate-500"
             rows={3}
             placeholder="Brain dump your thought..."
           />
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Platforms</p>
+          <p className="text-sm font-medium text-slate-900 dark:text-slate-50">Platforms</p>
           <div className="flex flex-wrap gap-2">
             {PLATFORM_OPTIONS.map((platform) => {
               const active = platforms.includes(platform);
@@ -805,8 +805,8 @@ function AddIdeaForm({
                   onClick={() => togglePlatform(platform)}
                   className={`rounded-full border px-3 py-1 text-sm transition ${
                     active
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-slate-200 bg-slate-50 text-slate-700 dark:text-slate-200 hover:border-slate-300"
+                      ? "border-sky-500 bg-sky-500 text-white dark:bg-sky-500 dark:text-white"
+                      : "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-100"
                   }`}
                 >
                   {platform}
@@ -818,11 +818,11 @@ function AddIdeaForm({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Content type</label>
+            <label className="text-sm font-medium text-slate-900 dark:text-slate-50">Content type</label>
             <select
               value={contentType}
               onChange={(e) => setContentType(e.target.value as ContentType)}
-              className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-50"
             >
               {CONTENT_TYPES.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -833,7 +833,7 @@ function AddIdeaForm({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Energy</label>
+            <label className="text-sm font-medium text-slate-900 dark:text-slate-50">Energy</label>
             <div className="flex items-center gap-3">
               <input
                 type="range"
@@ -843,18 +843,18 @@ function AddIdeaForm({
                 onChange={(e) => setEnergy(Number(e.target.value) as EnergyLevel)}
                 className="flex-1"
               />
-              <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">⚡{energy}</span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">⚡{energy}</span>
             </div>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Status</label>
+            <label className="text-sm font-medium text-slate-900 dark:text-slate-50">Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as IdeaStatus)}
-              className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-50"
             >
               {STATUS_COLUMNS.map((option) => (
                 <option key={option} value={option}>
@@ -865,11 +865,11 @@ function AddIdeaForm({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Next action</label>
+            <label className="text-sm font-medium text-slate-900 dark:text-slate-50">Next action</label>
             <select
               value={nextAction}
               onChange={(e) => setNextAction(e.target.value as NextAction)}
-              className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-50"
             >
               <option value="brain_dump">Brain dump</option>
               <option value="outline">Outline</option>
@@ -880,7 +880,7 @@ function AddIdeaForm({
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Attachments</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-slate-50">Attachments</p>
             <input
               type="file"
               multiple
@@ -906,8 +906,8 @@ function AddIdeaForm({
               void handleFiles(e.dataTransfer.files);
             }}
           >
-            <p className="text-slate-700 dark:text-slate-200">Drag and drop files here, or use the picker.</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Up to 5MB per file for inline previews.</p>
+            <p className="text-slate-700 dark:text-slate-100">Drag and drop files here, or use the picker.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-300">Up to 5MB per file for inline previews.</p>
           </div>
           {attachments.length > 0 && (
             <div className="grid gap-2 sm:grid-cols-2">
@@ -937,7 +937,7 @@ function AddIdeaForm({
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{attachment.name}</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-50 truncate">{attachment.name}</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">{(attachment.size / 1024).toFixed(0)} KB</p>
                     {!attachment.dataUrl && attachment.size > MAX_INLINE_ATTACHMENT_SIZE && (
                       <p className="text-[11px] text-amber-600">Too large for inline preview; metadata saved only.</p>
@@ -1026,7 +1026,7 @@ function IdeaCard({ idea, onAskHelper }: { idea: Idea; onAskHelper: (idea: Idea)
       className="border border-slate-200/80 bg-white/90 p-3 shadow-sm hover:border-blue-200 dark:border-slate-800 dark:bg-slate-900/80"
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm text-slate-900 dark:text-slate-100 mb-3 break-words overflow-hidden flex-1">
+        <p className="text-sm text-slate-900 dark:text-slate-50 mb-3 break-words overflow-hidden flex-1">
           {idea.text}
         </p>
         <button
@@ -1037,7 +1037,7 @@ function IdeaCard({ idea, onAskHelper }: { idea: Idea; onAskHelper: (idea: Idea)
           Ask Helper
         </button>
       </div>
-      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
         {idea.platforms.map((platform) => (
           <Badge
             key={platform}
@@ -1060,7 +1060,7 @@ function IdeaCard({ idea, onAskHelper }: { idea: Idea; onAskHelper: (idea: Idea)
 
       {idea.referenceTweets && idea.referenceTweets.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-          <span className="font-semibold text-slate-700 dark:text-slate-200">References:</span>
+          <span className="font-semibold text-slate-800 dark:text-slate-200">References:</span>
           {idea.referenceTweets.map((link, index) => (
             <a
               key={link}
@@ -1119,7 +1119,7 @@ function IdeaColumn({
       }`}
     >
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{status}</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{status}</p>
         <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 dark:text-slate-300 shadow-sm">
           {ideas.length}
         </span>
@@ -1160,7 +1160,7 @@ function IdeaBoard({
 function TodayFocusCard({ idea }: { idea: Idea }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-      <p className="text-sm text-slate-900 dark:text-slate-100 break-words overflow-hidden">{idea.text}</p>
+      <p className="text-sm text-slate-900 dark:text-slate-50 break-words overflow-hidden">{idea.text}</p>
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
         <Badge label={`⚡${idea.energy}`} colorClasses="bg-indigo-100 text-indigo-700" />
         <Badge
@@ -1282,8 +1282,8 @@ export default function HomePage() {
                 <Logo size={52} />
               </div>
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Creator Brain Inbox</p>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Capture, sort, and play with your ideas.</h1>
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-50">Creator Brain Inbox</p>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Capture, sort, and play with your ideas.</h1>
                 <p className="text-sm text-slate-600 dark:text-slate-300">Keep your inbox organized, focus on the right work, and revisit saved inspiration anytime.</p>
               </div>
             </div>
@@ -1294,7 +1294,7 @@ export default function HomePage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/saved-ideas"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-purple-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl"
+              className="inline-flex items-center gap-2 rounded-full bg-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-violet-600 hover:shadow-xl dark:bg-violet-500 dark:hover:bg-violet-600"
             >
               View saved ideas
             </Link>
@@ -1313,7 +1313,7 @@ export default function HomePage() {
           <div className="flex flex-col gap-3">
             <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Today&apos;s Focus</h3>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Today&apos;s Focus</h3>
                 <span className="text-xs text-slate-500 dark:text-slate-400">Top 3</span>
               </div>
               {focusIdeas.length === 0 ? (
@@ -1364,7 +1364,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setShowMobileFilters((prev) => !prev)}
-                className="mb-3 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-100 shadow-sm backdrop-blur"
+                className="mb-3 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-50 shadow-sm backdrop-blur"
               >
                 {showMobileFilters ? "Hide filters" : "Show filters"}
               </button>
@@ -1395,7 +1395,7 @@ export default function HomePage() {
 
             <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Ideas</h3>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Ideas</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Drag between columns to update status</p>
               </div>
               <IdeaBoard ideas={filteredIdeas} onMoveIdea={moveIdea} onAskHelper={openHelper} />
@@ -1405,7 +1405,7 @@ export default function HomePage() {
           <div className="hidden space-y-4 md:block">
             <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Today&apos;s Focus</h3>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Today&apos;s Focus</h3>
                 <span className="text-xs text-slate-500 dark:text-slate-400">Top 3</span>
               </div>
               {focusIdeas.length === 0 ? (
