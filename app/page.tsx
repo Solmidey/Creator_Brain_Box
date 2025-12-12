@@ -662,7 +662,7 @@ export default function HomePage() {
                 ...prev,
                 platforms: prev.platforms.includes(platform)
                   ? prev.platforms.filter((p) => p !== platform)
-                  : [...prev, platform],
+                  : [...prev.platforms, platform],
               }))
             }
             onToggleStatus={(status) =>
@@ -670,7 +670,7 @@ export default function HomePage() {
                 ...prev,
                 statuses: prev.statuses.includes(status)
                   ? prev.statuses.filter((s) => s !== status)
-                  : [...prev, status],
+                  : [...prev.statuses, status],
               }))
             }
             onSelectTimeframe={(timeframe) => setFilters((prev) => ({ ...prev, timeframe }))}
@@ -698,7 +698,7 @@ export default function HomePage() {
                     ...prev,
                     platforms: prev.platforms.includes(platform)
                       ? prev.platforms.filter((p) => p !== platform)
-                      : [...prev, platform],
+                      : [...prev.platforms, platform],
                   }))
                 }
                 onToggleStatus={(status) =>
@@ -706,7 +706,7 @@ export default function HomePage() {
                     ...prev,
                     statuses: prev.statuses.includes(status)
                       ? prev.statuses.filter((s) => s !== status)
-                      : [...prev, status],
+                      : [...prev.statuses, status],
                   }))
                 }
                 onSelectTimeframe={(timeframe) => setFilters((prev) => ({ ...prev, timeframe }))}
