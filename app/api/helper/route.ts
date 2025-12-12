@@ -1,50 +1,72 @@
-import { NextRequest, NextResponse } from "next/server";
+import { SYSTEM_PROMPT, buildHelperPrompt, HelperRequest } from "./prompt";
 
-type HelperRequestBody = {
-  text: string;
-  platforms?: string[];
-  mode?: string;
-  referenceTweets?: string[];
-  contentType?: string;
-  energy?: number;
-};
+const MODEL = process.env.OPENAI_MODEL ?? "llama-3.1-8b-instant";
 
-export async function POST(req: NextRequest) {
-  const body = (await req.json()) as HelperRequestBody;
-  const { text, platforms = [], mode, referenceTweets = [], contentType, energy } = body;
-
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json({ error: "AI helper not configured" }, { status: 500 });
-  }
-
-  const prompt = `You are an expert content strategist. Based on the following idea, provide a concise suggestion. Idea: ${text}. Mode: ${mode}. Platforms: ${platforms.join(", ")}. Content type: ${contentType}. Energy: ${energy}. Reference tweets or context: ${referenceTweets.join(", ")}. Respond with a tight, high-signal suggestion ready to use.`;
-
+export async function POST(req: Request) {
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.6,
-        max_tokens: 400,
-      }),
-    });
+    const apiKey = process.env.OPENAI_API_KEY;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json({ error: "Failed to generate suggestion", details: errorText }, { status: 500 });
+    if (!apiKey) {
+      console.error("AI helper is not configured: missing OPENAI_API_KEY.");
+      return Response.json(
+        { error: "AI helper is not configured (missing OPENAI_API_KEY)." },
+        { status: 500 }
+      );
     }
 
-    const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-    const suggestion = data.choices?.[0]?.message?.content?.trim() ?? "";
+    const body = (await req.json()) as HelperRequest;
 
-    return NextResponse.json({ suggestion });
-  } catch (error) {
-    console.error("Helper API error", error);
-    return NextResponse.json({ error: "Failed to generate suggestion" }, { status: 500 });
+    if (!body || !body.ideaText || !body.ideaText.trim()) {
+      return Response.json({ error: "Missing idea text." }, { status: 400 });
+    }
+
+    const userPrompt = buildHelperPrompt(body);
+
+    const groqRes = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userPrompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 600,
+        }),
+      }
+    );
+
+    if (!groqRes.ok) {
+      const errorText = await groqRes.text();
+      console.error("Helper upstream error:", groqRes.status, errorText);
+      return Response.json(
+        { error: "Upstream AI error. Please try again later." },
+        { status: 502 }
+      );
+    }
+
+    const data = (await groqRes.json()) as any;
+    const suggestion = data?.choices?.[0]?.message?.content?.trim() ?? "";
+
+    if (!suggestion) {
+      return Response.json(
+        { error: "AI returned an empty response." },
+        { status: 500 }
+      );
+    }
+
+    return Response.json({ suggestion });
+  } catch (err) {
+    console.error("Helper API error:", err);
+    return Response.json(
+      { error: "Unexpected error while generating suggestion." },
+      { status: 500 }
+    );
   }
 }
