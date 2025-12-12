@@ -24,6 +24,7 @@ export type Idea = {
   status: IdeaStatus;
   nextAction: NextAction;
   createdAt: string;
+  updatedAt: string;
   attachments?: Attachment[];
   referenceTweets?: string[];
 };

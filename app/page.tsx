@@ -397,7 +397,7 @@ function ContentHelperModal({
   isOpen: boolean;
   onClose: () => void;
   seedIdea?: Idea;
-  onSaveIdea: (payload: Omit<Idea, "id" | "createdAt">) => void;
+  onSaveIdea: (payload: Omit<Idea, "id" | "createdAt" | "updatedAt">) => void;
   onReplaceIdea?: (id: string, text: string) => void;
 }) {
   const [mode, setMode] = useState<ContentHelperMode>("polish");
@@ -683,7 +683,7 @@ const response = await fetch("/api/helper", {
 function AddIdeaForm({
   onAddIdea,
 }: {
-  onAddIdea: (idea: Omit<Idea, "id" | "createdAt">) => void;
+  onAddIdea: (idea: Omit<Idea, "id" | "createdAt" | "updatedAt">) => void;
 }) {
   const [text, setText] = useState("");
   const [platforms, setPlatforms] = useState<Platform[]>([]);
@@ -1191,7 +1191,7 @@ function StreakCard({ streak }: { streak: Streak }) {
 }
 
 export default function HomePage() {
-  const { savedIdeas: ideas, saveIdea } = useSavedIdeas();
+  const { savedIdeas: ideas, saveIdea, updateIdea } = useSavedIdeas();
   const [filters, setFilters] = useState<Filters>({ platforms: [], statuses: [], timeframe: null });
   const [streak, setStreak] = useState<Streak>({ currentStreak: 0, lastIdeaDate: null });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -1219,13 +1219,14 @@ export default function HomePage() {
     return () => clearTimeout(handler);
   }, [streak]);
 
-  const addIdea = (ideaInput: Omit<Idea, "id" | "createdAt">) => {
+  const addIdea = (ideaInput: Omit<Idea, "id" | "createdAt" | "updatedAt">) => {
     const now = new Date();
     const isoDate = now.toISOString();
     const dateKey = getISODate(now);
     const newIdea: Idea = {
       id: crypto.randomUUID(),
       createdAt: isoDate,
+      updatedAt: isoDate,
       ...ideaInput,
       attachments: ideaInput.attachments ?? [],
       referenceTweets: ideaInput.referenceTweets ?? [],
@@ -1243,16 +1244,10 @@ export default function HomePage() {
     });
   };
 
-  const moveIdea = (id: string, status: IdeaStatus) => {
-    const idea = ideas.find((entry) => entry.id === id);
-    if (!idea) return;
-    saveIdea({ ...idea, status });
-  };
+  const moveIdea = (id: string, status: IdeaStatus) => updateIdea(id, { status });
 
   const updateIdeaText = (id: string, text: string) => {
-    const idea = ideas.find((entry) => entry.id === id);
-    if (!idea) return;
-    saveIdea({ ...idea, text });
+    updateIdea(id, { text });
   };
 
   const filteredIdeas = useMemo(() => filterIdeas(ideas, filters), [ideas, filters]);
