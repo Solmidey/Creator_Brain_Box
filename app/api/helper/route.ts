@@ -1,13 +1,13 @@
-import { SYSTEM_PROMPT, buildHelperPrompt, HelperRequest } from "./prompt";
+// app/api/helper/route.ts
+import { SYSTEM_PROMPT, buildHelperPrompt, type HelperRequest } from "./prompt";
 
-const MODEL = process.env.OPENAI_MODEL ?? "llama-3.1-8b-instant";
+const MODEL = process.env.OPENAI_MODEL || "llama-3.1-8b-instant";
 
 export async function POST(req: Request) {
   try {
     const apiKey = process.env.OPENAI_API_KEY;
-
     if (!apiKey) {
-      console.error("AI helper is not configured: missing OPENAI_API_KEY.");
+      console.error("Missing OPENAI_API_KEY");
       return Response.json(
         { error: "AI helper is not configured (missing OPENAI_API_KEY)." },
         { status: 500 }
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: MODEL,
+          model: MODEL, // e.g. "llama-3.1-8b-instant" or "openai/gpt-oss-120b"
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
             { role: "user", content: userPrompt },
@@ -43,8 +43,8 @@ export async function POST(req: Request) {
     );
 
     if (!groqRes.ok) {
-      const errorText = await groqRes.text();
-      console.error("Helper upstream error:", groqRes.status, errorText);
+      const text = await groqRes.text();
+      console.error("Groq error:", groqRes.status, text);
       return Response.json(
         { error: "Upstream AI error. Please try again later." },
         { status: 502 }
@@ -52,7 +52,8 @@ export async function POST(req: Request) {
     }
 
     const data = (await groqRes.json()) as any;
-    const suggestion = data?.choices?.[0]?.message?.content?.trim() ?? "";
+    const suggestion: string =
+      data?.choices?.[0]?.message?.content?.trim() ?? "";
 
     if (!suggestion) {
       return Response.json(
