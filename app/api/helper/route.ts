@@ -1,9 +1,42 @@
 export const runtime = "nodejs";
 
-import { SYSTEM_PROMPT, buildHelperPrompt } from "./prompt";
+import { SYSTEM_PROMPT } from "./prompt";
 import type { HelperRequest } from "./prompt";
 
+type ChatCompletionMessageParam = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
 const MODEL = process.env.OPENAI_MODEL || "llama-3.1-8b-instant";
+
+async function fetchTweetSnippets(urls: string[]): Promise<string> {
+  const results: string[] = [];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { method: "GET" });
+      if (!res.ok) continue;
+      const html = await res.text();
+
+      const match =
+        html.match(/property="og:description" content="([^"]+)"/) ??
+        html.match(/name="description" content="([^"]+)"/);
+
+      if (match && match[1]) {
+        results.push(`Tweet at ${url}: ${match[1]}`);
+      } else {
+        results.push(
+          `Tweet at ${url}: (content could not be extracted, use the URL as reference)`,
+        );
+      }
+    } catch (err) {
+      console.warn("[/api/helper] Failed to fetch tweet", url, err);
+    }
+  }
+
+  return results.join("\n");
+}
 
 export async function POST(req: Request) {
   try {
@@ -21,12 +54,59 @@ export async function POST(req: Request) {
 
     const body = (await req.json()) as HelperRequest;
 
-    if (!body || !body.ideaText || !body.ideaText.trim()) {
+    const {
+      mode,
+      platform,
+      ideaText,
+      contentType,
+      energy,
+      referenceTweets = [],
+      attachmentsSummary = "",
+    } = body;
+
+    if (!body || !ideaText || !ideaText.trim()) {
       console.warn("[/api/helper] Missing idea text");
       return Response.json({ error: "Missing idea text." }, { status: 400 });
     }
 
-    const userPrompt = buildHelperPrompt(body);
+    let tweetContext = "";
+    if (referenceTweets.length > 0) {
+      tweetContext = await fetchTweetSnippets(referenceTweets);
+    }
+
+    const contextParts: string[] = [];
+    if (attachmentsSummary) contextParts.push(`MEDIA/FILES:\n${attachmentsSummary}`);
+    if (tweetContext) contextParts.push(`TWEETS:\n${tweetContext}`);
+
+    const fullContext = contextParts.join("\n\n");
+
+    const messages: ChatCompletionMessageParam[] = [
+      {
+        role: "system",
+        content: [
+          "You are a content helper for social media ideas.",
+          "You ALWAYS consider any reference tweets or media summaries provided as context.",
+          "Use them to keep facts consistent, but write in the user’s own voice.",
+          SYSTEM_PROMPT,
+        ].join(" "),
+      },
+      {
+        role: "user",
+        content: [
+          `Mode: ${mode}`,
+          `Platform: ${platform}`,
+          `Content type: ${contentType}`,
+          `Energy level: ${energy}`,
+          fullContext ? `Context:\n${fullContext}` : "",
+          "",
+          `Idea text:\n${ideaText}`,
+          "",
+          "Based on the context and the idea text, generate the requested content or suggestion.",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      },
+    ];
 
     console.log("[/api/helper] Calling Groq model:", MODEL);
 
@@ -40,10 +120,7 @@ export async function POST(req: Request) {
         },
         body: JSON.stringify({
           model: MODEL,
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: userPrompt },
-          ],
+          messages,
           temperature: 0.7,
           max_tokens: 600,
         }),

@@ -7,12 +7,11 @@ import HeroHeader from "./components/HeroHeader";
 import { ContentHelperModal, type ContentHelperModalProps } from "./components/ContentHelperModal";
 import { useSavedIdeas, type Idea } from "./hooks/useSavedIdeas";
 import type {
-  Attachment,
-  AttachmentType,
   ContentType,
   EnergyLevel,
   Filters,
   IdeaStatus,
+  IdeaAttachment,
   NextAction,
   Platform,
   Streak,
@@ -108,17 +107,17 @@ function getNextActionColor(action: NextAction) {
   return "bg-slate-100 text-slate-700 dark:bg-slate-800/70 dark:text-slate-100";
 }
 
-function inferAttachmentType(mimeType: string): AttachmentType {
+function inferAttachmentType(mimeType: string): IdeaAttachment["type"] {
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType.startsWith("video/")) return "video";
-  if (mimeType.startsWith("audio/")) return "audio";
+  if (mimeType.startsWith("audio/")) return "file";
   if (
     mimeType === "application/pdf" ||
     mimeType.includes("document") ||
     mimeType.includes("msword") ||
     mimeType.includes("sheet")
   )
-    return "document";
+    return "file";
   return "other";
 }
 
@@ -253,7 +252,7 @@ function AttachmentModal({
   onClose,
 }: {
   open: boolean;
-  attachments: Attachment[];
+  attachments: IdeaAttachment[];
   onClose: () => void;
 }) {
   if (!open) return null;
@@ -277,14 +276,15 @@ function AttachmentModal({
                 key={attachment.id}
                 className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/80"
               >
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate">{attachment.name}</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate">{attachment.name ?? attachment.url}</p>
               <p className="text-xs text-slate-500 dark:text-slate-300">
-                {attachment.type.toUpperCase()} • {(attachment.size / 1024).toFixed(0)} KB
+                {attachment.type.toUpperCase()} •
+                {attachment.size ? ` ${(attachment.size / 1024).toFixed(0)} KB` : " Size unknown"}
               </p>
               {attachment.type === "image" && attachment.dataUrl ? (
                 <Image
                   src={attachment.dataUrl}
-                  alt={attachment.name}
+                  alt={attachment.name ?? "Attachment image"}
                   width={800}
                   height={600}
                   unoptimized
@@ -325,7 +325,7 @@ function AddIdeaForm({
   const [energy, setEnergy] = useState<EnergyLevel>(3);
   const [status, setStatus] = useState<IdeaStatus>("Inbox");
   const [nextAction, setNextAction] = useState<NextAction>("brain_dump");
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [attachments, setAttachments] = useState<IdeaAttachment[]>([]);
   const [referenceTweets, setReferenceTweets] = useState<string[]>([]);
   const [tweetInput, setTweetInput] = useState("");
   const [tweetError, setTweetError] = useState<string | null>(null);
@@ -354,7 +354,8 @@ function AddIdeaForm({
             size: file.size,
             mimeType: file.type,
             dataUrl,
-          } satisfies Attachment;
+            url: dataUrl ?? file.name,
+          } satisfies IdeaAttachment;
         }
         return {
           id: crypto.randomUUID(),
@@ -362,7 +363,8 @@ function AddIdeaForm({
           name: file.name,
           size: file.size,
           mimeType: file.type,
-        } satisfies Attachment;
+          url: file.name,
+        } satisfies IdeaAttachment;
       })
     );
     setAttachments((prev) => [...prev, ...processed]);
@@ -554,7 +556,7 @@ function AddIdeaForm({
                   {attachment.type === "image" && attachment.dataUrl ? (
                     <Image
                       src={attachment.dataUrl}
-                      alt={attachment.name}
+                      alt={attachment.name ?? "Attachment"}
                       width={48}
                       height={48}
                       unoptimized
@@ -562,19 +564,23 @@ function AddIdeaForm({
                     />
                   ) : (
                     <div className="flex h-12 w-12 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-600 dark:bg-slate-800/70 dark:text-slate-300">
-                      {attachment.type === "document"
-                        ? "DOC"
-                        : attachment.type === "video"
-                          ? "VID"
-                          : attachment.type === "audio"
-                            ? "AUD"
-                            : "FILE"}
+                      {attachment.type === "video"
+                        ? "VID"
+                        : attachment.type === "image"
+                          ? "IMG"
+                          : attachment.type === "file"
+                            ? "FILE"
+                            : "LINK"}
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-50 truncate">{attachment.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-300">{(attachment.size / 1024).toFixed(0)} KB</p>
-                    {!attachment.dataUrl && attachment.size > MAX_INLINE_ATTACHMENT_SIZE && (
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-50 truncate">{attachment.name ?? attachment.url}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-300">
+                      {attachment.size ? `${(attachment.size / 1024).toFixed(0)} KB` : "Size unknown"}
+                    </p>
+                    {!attachment.dataUrl &&
+                      attachment.size &&
+                      attachment.size > MAX_INLINE_ATTACHMENT_SIZE && (
                       <p className="text-[11px] text-amber-600">Too large for inline preview; metadata saved only.</p>
                     )}
                   </div>
@@ -861,6 +867,8 @@ export default function HomePage() {
   const [helperInitialPlatform, setHelperInitialPlatform] = useState<
     ContentHelperModalProps["initialPlatform"]
   >();
+  const [helperInitialReferenceTweets, setHelperInitialReferenceTweets] = useState<string[]>([]);
+  const [helperInitialAttachments, setHelperInitialAttachments] = useState<IdeaAttachment[]>([]);
 
   useEffect(() => {
     try {
@@ -959,6 +967,8 @@ export default function HomePage() {
     setActiveIdeaId(idea?.id ?? null);
     setHelperInitialText(idea?.text ?? "");
     setHelperInitialPlatform(mapPlatformToHelperPlatform(idea?.platforms[0]));
+    setHelperInitialReferenceTweets(idea?.referenceTweets ?? []);
+    setHelperInitialAttachments(idea?.attachments ?? []);
     setHelperOpen(true);
   };
 
@@ -1089,6 +1099,8 @@ export default function HomePage() {
           open={helperOpen}
           initialText={helperInitialText}
           initialPlatform={helperInitialPlatform}
+          initialReferenceTweets={helperInitialReferenceTweets}
+          initialAttachments={helperInitialAttachments}
           onClose={() => setHelperOpen(false)}
           onSaveIdea={handleHelperIdeaSaved}
           onApplySuggestion={handleApplySuggestion}
