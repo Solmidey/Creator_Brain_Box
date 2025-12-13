@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type DragEvent } from "react";
+import AppHeader from "./components/AppHeader";
 import HeroHeader from "./components/HeroHeader";
 import { ContentHelperModal, type ContentHelperModalProps } from "./components/ContentHelperModal";
 import { useSavedIdeas, type Idea } from "./hooks/useSavedIdeas";
@@ -985,6 +986,7 @@ export default function HomePage() {
       <div className="pointer-events-none absolute right-[-120px] top-32 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl dark:bg-purple-600/20" />
 
       <main className="relative mx-auto max-w-6xl space-y-6 px-4">
+        <AppHeader />
         <HeroHeader onOpenHelper={() => openHelper()} />
 
         {/* Mobile: focus + streak */}
