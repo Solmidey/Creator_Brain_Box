@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 
 import { ContentHelperModal, type ContentHelperModalProps } from "../components/ContentHelperModal";
-import { useSavedIdeas } from "../hooks/useSavedIdeas";
-import type { Idea } from "../types/ideas";
+import { useSavedIdeas, type Idea } from "../hooks/useSavedIdeas";
 
 const STATUS_OPTIONS: Idea["status"][] = ["Inbox", "Ready", "Drafting", "Posted"];
 const NEXT_ACTION_OPTIONS: Idea["nextAction"][] = ["brain_dump", "outline", "publish"];

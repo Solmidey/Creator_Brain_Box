@@ -5,14 +5,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type DragEvent } from "react";
 import HeroHeader from "./components/HeroHeader";
 import { ContentHelperModal, type ContentHelperModalProps } from "./components/ContentHelperModal";
-import { useSavedIdeas } from "./hooks/useSavedIdeas";
+import { useSavedIdeas, type Idea } from "./hooks/useSavedIdeas";
 import type {
   Attachment,
   AttachmentType,
   ContentType,
   EnergyLevel,
   Filters,
-  Idea,
   IdeaStatus,
   NextAction,
   Platform,
@@ -884,10 +883,25 @@ export default function HomePage() {
     return () => clearTimeout(handler);
   }, [streak]);
 
+  const updateStreakForDate = (date: Date) => {
+    const dateKey = getISODate(date);
+
+    setStreak((prev) => {
+      if (prev.lastIdeaDate === dateKey) return prev;
+
+      const yesterday = getISODate(new Date(date.getTime() - 1000 * 60 * 60 * 24));
+
+      if (prev.lastIdeaDate === yesterday) {
+        return { currentStreak: prev.currentStreak + 1, lastIdeaDate: dateKey };
+      }
+
+      return { currentStreak: 1, lastIdeaDate: dateKey };
+    });
+  };
+
   const addIdea = (ideaInput: Omit<Idea, "id" | "createdAt" | "updatedAt">) => {
     const now = new Date();
     const isoDate = now.toISOString();
-    const dateKey = getISODate(now);
     const newIdea: Idea = {
       id: crypto.randomUUID(),
       createdAt: isoDate,
@@ -898,15 +912,11 @@ export default function HomePage() {
     };
 
     saveIdea(newIdea);
+    updateStreakForDate(now);
+  };
 
-    setStreak((prev) => {
-      if (prev.lastIdeaDate === dateKey) return prev;
-      const yesterday = getISODate(new Date(now.getTime() - 1000 * 60 * 60 * 24));
-      if (prev.lastIdeaDate === yesterday) {
-        return { currentStreak: prev.currentStreak + 1, lastIdeaDate: dateKey };
-      }
-      return { currentStreak: 1, lastIdeaDate: dateKey };
-    });
+  const handleHelperIdeaSaved = (idea: Idea) => {
+    updateStreakForDate(new Date(idea.createdAt));
   };
 
   const moveIdea = (id: string, status: IdeaStatus) => updateIdea(id, { status });
@@ -1080,7 +1090,7 @@ export default function HomePage() {
           initialText={helperInitialText}
           initialPlatform={helperInitialPlatform}
           onClose={() => setHelperOpen(false)}
-          onSaveIdea={addIdea}
+          onSaveIdea={handleHelperIdeaSaved}
           onApplySuggestion={handleApplySuggestion}
         />
       </main>
