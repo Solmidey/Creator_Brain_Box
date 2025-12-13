@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type ChangeEvent, useMemo, useState } from "react";
 
 import { ContentHelperModal, type ContentHelperModalProps } from "../components/ContentHelperModal";
+import { PlatformPreview } from "../components/PlatformPreview";
 import { useSavedIdeas, type Idea } from "../hooks/useSavedIdeas";
 import type { ContentType, IdeaAttachment, IdeaStatus, Platform as IdeaPlatform } from "../types/ideas";
 
@@ -409,6 +410,14 @@ export default function BrainForgePage() {
           </section>
 
           <section className="space-y-3 rounded-3xl border border-slate-900/80 bg-slate-900/70 p-3 shadow-lg">
+            <PlatformPreview
+              platform={editorPlatform}
+              title={editorTitle}
+              body={editorBody}
+              outline={outline}
+              attachments={attachments}
+            />
+
             <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
               <h2 className="text-xs font-semibold text-slate-200 uppercase tracking-wide">Outline (optional)</h2>
               <p className="mt-1 text-[11px] text-slate-400">
