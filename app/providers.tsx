@@ -5,10 +5,6 @@ import { ThemeProvider } from "next-themes";
 
 type ProvidersProps = { children: React.ReactNode };
 
-/**
- * Global app providers for Creator Brain Box.
- * Currently handles dark/light theme via next-themes.
- */
 export function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider
@@ -21,7 +17,7 @@ export function Providers({ children }: ProvidersProps) {
   );
 }
 
-// Alias so existing imports `AppProviders` keep working
+// Keep existing imports working: `import { AppProviders } from "./providers"`
 export const AppProviders = Providers;
 
 export default Providers;
