@@ -5,6 +5,7 @@ import { type ChangeEvent, useMemo, useState } from "react";
 
 import { ContentHelperModal, type ContentHelperModalProps } from "../components/ContentHelperModal";
 import { PlatformPreview } from "../components/PlatformPreview";
+import { useMediaLibrary } from "../hooks/useMediaLibrary";
 import { useSavedIdeas, type Idea } from "../hooks/useSavedIdeas";
 import type { ContentType, IdeaAttachment, IdeaStatus, Platform as IdeaPlatform } from "../types/ideas";
 
@@ -104,6 +105,7 @@ function getIdeaPreview(text: string) {
 
 export default function BrainForgePage() {
   const { savedIdeas, saveIdea, updateIdea } = useSavedIdeas();
+  const mediaLibrary = useMediaLibrary();
   const [activeIdeaId, setActiveIdeaId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("All");
   const [editorTitle, setEditorTitle] = useState("");
@@ -170,6 +172,8 @@ export default function BrainForgePage() {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
 
+    mediaLibrary.addFromFiles(files, activeIdeaId ?? undefined);
+
     const next: IdeaAttachment[] = files.map((file) => ({
       id: `${Date.now()}-${file.name}`,
       type: file.type.startsWith("video") ? "video" : "image",
@@ -204,9 +208,15 @@ export default function BrainForgePage() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
       <div className="mx-auto max-w-6xl px-4 pb-10 pt-4">
-        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3">
           <Link href="/" className="text-xs text-slate-400 transition hover:text-slate-200">
             ← Back to Inbox
+          </Link>
+          <Link
+            href="/media-library"
+            className="text-xs text-slate-400 transition hover:text-slate-200"
+          >
+            Media library
           </Link>
           <div className="ml-auto text-right">
             <h1 className="text-lg font-bold tracking-tight sm:text-xl">Brain Forge</h1>
