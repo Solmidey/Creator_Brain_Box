@@ -5,26 +5,87 @@ import { useMemo, useState } from "react";
 
 import { ContentHelperModal, type ContentHelperModalProps } from "../components/ContentHelperModal";
 import { useSavedIdeas, type Idea } from "../hooks/useSavedIdeas";
-import type { ContentType, IdeaStatus, Platform } from "../types/ideas";
+import type { ContentType, IdeaStatus, Platform as IdeaPlatform } from "../types/ideas";
+
+type Platform = "x" | "instagram" | "youtube" | "newsletter";
+
+const PLATFORM_CONFIG: Record<Platform, {
+  editorLabel: string;
+  editorPlaceholder: string;
+  outlinePlaceholder: string;
+}> = {
+  x: {
+    editorLabel: "X thread builder",
+    editorPlaceholder:
+      "Write this like a thread.\n\nLine 1 = HOOK\n\n1/ First point\n2/ Second point\n3/ Third point\n\nEnd with a simple CTA.",
+    outlinePlaceholder:
+      "Hook – one line that grabs attention\nTweet 1 – main point\nTweet 2 – example or story\nCTA – what you want them to do",
+  },
+  instagram: {
+    editorLabel: "Instagram carousel builder",
+    editorPlaceholder:
+      "Think in slides.\n\nSLIDE 1 – Hook\nSLIDE 2–4 – Value / tips\nSLIDE 5 – Story or example\nLAST SLIDE – CTA (what they should do next).",
+    outlinePlaceholder:
+      "Slide 1 – hook\nSlides 2–3 – main tips\nSlide 4 – proof / story\nLast slide – CTA",
+  },
+  youtube: {
+    editorLabel: "YouTube / video script",
+    editorPlaceholder:
+      "Write a simple script.\n\nINTRO – hook them fast\nSECTION 1 – main idea\nSECTION 2 – example / demo\nSECTION 3 – key takeaways\nOUTRO – CTA + what to watch next.",
+    outlinePlaceholder:
+      "Intro – hook\nPart 1 – main idea\nPart 2 – example or story\nOutro – CTA",
+  },
+  newsletter: {
+    editorLabel: "Newsletter / long-form",
+    editorPlaceholder:
+      "Write this like an email or newsletter.\n\nSUBJECT – short, clear promise\nOPENING – why this matters\nBODY – 2–3 clear points\nWRAP-UP – summary\nCTA / PS – what they should do next.",
+    outlinePlaceholder:
+      "Subject – big promise\nOpening – 1–2 lines\nBody – 2–3 points\nCTA / PS – next step",
+  },
+};
 
 const STATUS_FILTERS: (IdeaStatus | "All")[] = ["All", "Inbox", "Ready", "Drafting", "Posted"];
-const PLATFORM_OPTIONS: Platform[] = ["X", "LinkedIn", "Instagram", "Newsletter", "YouTube"];
+const PLATFORM_OPTIONS: Platform[] = ["x", "instagram", "youtube", "newsletter"];
 const CONTENT_TYPE_OPTIONS: ContentType[] = ["thread", "hook", "carousel", "email", "script"];
 
 function platformToHelperPlatform(platform?: Platform): ContentHelperModalProps["initialPlatform"] {
   switch (platform) {
-    case "X":
+    case "x":
       return "x";
-    case "LinkedIn":
-      return "linkedin";
-    case "Instagram":
+    case "instagram":
       return "instagram";
-    case "Newsletter":
+    case "newsletter":
       return "newsletter";
-    case "YouTube":
+    case "youtube":
       return "youtube";
     default:
       return undefined;
+  }
+}
+
+function ideaPlatformToEditorPlatform(platform?: IdeaPlatform): Platform {
+  switch (platform) {
+    case "Instagram":
+      return "instagram";
+    case "YouTube":
+      return "youtube";
+    case "Newsletter":
+      return "newsletter";
+    default:
+      return "x";
+  }
+}
+
+function editorPlatformToIdeaPlatform(platform: Platform): IdeaPlatform {
+  switch (platform) {
+    case "instagram":
+      return "Instagram";
+    case "youtube":
+      return "YouTube";
+    case "newsletter":
+      return "Newsletter";
+    default:
+      return "X";
   }
 }
 
@@ -40,11 +101,13 @@ export default function BrainForgePage() {
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("All");
   const [editorTitle, setEditorTitle] = useState("");
   const [editorBody, setEditorBody] = useState("");
-  const [editorPlatform, setEditorPlatform] = useState<Platform>("X");
+  const [editorPlatform, setEditorPlatform] = useState<Platform>("x");
   const [editorContentType, setEditorContentType] = useState<ContentType>("thread");
   const [outline, setOutline] = useState("");
   const [helperOpen, setHelperOpen] = useState(false);
   const [helperInitialText, setHelperInitialText] = useState("");
+
+  const platformConfig = PLATFORM_CONFIG[editorPlatform];
 
   const filteredIdeas = useMemo(() => {
     if (statusFilter === "All") return savedIdeas;
@@ -55,7 +118,7 @@ export default function BrainForgePage() {
     setActiveIdeaId(idea.id);
     setEditorBody(idea.text ?? "");
     setEditorContentType(idea.contentType ?? "thread");
-    setEditorPlatform(idea.platforms?.[0] ?? "X");
+    setEditorPlatform(ideaPlatformToEditorPlatform(idea.platforms?.[0]));
     setEditorTitle(getIdeaPreview(idea.text ?? ""));
   };
 
@@ -64,7 +127,7 @@ export default function BrainForgePage() {
     updateIdea(activeIdeaId, {
       text: editorBody,
       contentType: editorContentType,
-      platforms: [editorPlatform],
+      platforms: [editorPlatformToIdeaPlatform(editorPlatform)],
     });
   };
 
@@ -74,7 +137,7 @@ export default function BrainForgePage() {
       id: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now()),
       text: editorBody,
       contentType: editorContentType,
-      platforms: [editorPlatform],
+      platforms: [editorPlatformToIdeaPlatform(editorPlatform)],
       status: "Ready",
       nextAction: "outline",
       energy: 3,
@@ -173,7 +236,9 @@ export default function BrainForgePage() {
                         : "border-slate-800 bg-slate-950/70 text-slate-300 hover:border-slate-700"
                     }`}
                   >
-                    {platform}
+                    {platform === "x"
+                      ? "X"
+                      : platform.charAt(0).toUpperCase() + platform.slice(1)}
                   </button>
                 ))}
               </div>
@@ -191,12 +256,15 @@ export default function BrainForgePage() {
               </select>
             </div>
 
+            <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+              {platformConfig.editorLabel}
+            </p>
             <textarea
               value={editorBody}
               onChange={(e) => setEditorBody(e.target.value)}
               rows={14}
               className="w-full resize-none rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-3 text-sm text-slate-100 outline-none"
-              placeholder="Start forging your cracked idea here..."
+              placeholder={platformConfig.editorPlaceholder}
             />
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
@@ -225,14 +293,16 @@ export default function BrainForgePage() {
 
           <section className="space-y-3 rounded-3xl border border-slate-900/80 bg-slate-900/70 p-3 shadow-lg">
             <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-200">Structure</h2>
-              <p className="mt-1 text-[11px] text-slate-400">Sketch your hook, main points, and CTA.</p>
+              <h2 className="text-xs font-semibold text-slate-200 uppercase tracking-wide">Outline (optional)</h2>
+              <p className="mt-1 text-[11px] text-slate-400">
+                Jot a quick plan so your post doesn&apos;t feel all over the place.
+              </p>
               <textarea
                 value={outline}
                 onChange={(e) => setOutline(e.target.value)}
                 rows={8}
                 className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-xs text-slate-100 outline-none"
-                placeholder="- Hook\n- Point 1\n- Point 2\n- CTA"
+                placeholder={platformConfig.outlinePlaceholder}
               />
             </div>
 
