@@ -987,7 +987,7 @@ export default function HomePage() {
 
       <main className="relative mx-auto max-w-6xl space-y-6 px-4">
         <AppHeader />
-        <HeroHeader onOpenHelper={() => openHelper()} />
+        <HeroHeader />
 
         {/* Mobile: focus + streak */}
         <div className="space-y-3 md:hidden">
