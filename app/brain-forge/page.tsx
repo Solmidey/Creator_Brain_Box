@@ -371,11 +371,30 @@ export default function BrainForgePage() {
                       className="inline-flex items-center gap-1 rounded-full bg-slate-800/80 px-2.5 py-1 text-[10px] text-slate-100"
                     >
                       <span className="uppercase text-[9px] text-slate-400">{a.type}</span>
-                      <span className="max-w-[140px] truncate">{a.name ?? a.url}</span>
+                      <span className="max-w-[120px] truncate">
+                        {a.name ?? a.url}
+                      </span>
+
+                      {/* Download button */}
+                      {(a.type === "image" || a.type === "video" || a.type === "file") && (
+                        <a
+                          href={a.url}
+                          download={a.name || undefined}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="ml-1 rounded-full bg-slate-700/80 px-1.5 py-0.5 text-[9px] text-slate-100 hover:bg-slate-600"
+                          title="Download media"
+                        >
+                          ⬇
+                        </a>
+                      )}
+
+                      {/* Remove button */}
                       <button
                         type="button"
                         onClick={() => handleRemoveAttachment(a.id)}
-                        className="ml-1 text-slate-400 hover:text-red-400"
+                        className="ml-0.5 text-slate-400 hover:text-red-400"
+                        title="Remove"
                       >
                         ×
                       </button>

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React from "react";
@@ -11,6 +12,26 @@ interface PlatformPreviewProps {
   body: string;
   outline: string;
   attachments: IdeaAttachment[];
+}
+
+function renderImageThumb(a: IdeaAttachment, className = "") {
+  return (
+    <img
+      src={a.url}
+      alt={a.name ?? "Uploaded image"}
+      className={className || "h-full w-full object-cover rounded-xl"}
+    />
+  );
+}
+
+function renderVideoThumb(a: IdeaAttachment, className = "") {
+  return (
+    <video
+      src={a.url}
+      controls
+      className={className || "h-full w-full object-cover rounded-xl"}
+    />
+  );
 }
 
 export function PlatformPreview(props: PlatformPreviewProps) {
@@ -65,6 +86,8 @@ function XPreview({
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
+  const imageAttachments = attachments.filter((a) => a.type === "image");
+  const videoAttachments = attachments.filter((a) => a.type === "video");
 
   return (
     <div className="rounded-3xl border border-slate-800 bg-slate-950/90 p-4 text-sm text-slate-50 shadow-xl">
@@ -89,14 +112,16 @@ function XPreview({
             ))}
           </div>
 
-          {attachments.length > 0 && (
+          {(imageAttachments.length > 0 || videoAttachments.length > 0) && (
             <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl bg-slate-900/80 p-2">
-              {attachments.slice(0, 4).map((a) => (
-                <div
-                  key={a.id}
-                  className="h-24 rounded-xl bg-slate-800/80 text-[10px] text-slate-300 flex items-center justify-center text-center px-2"
-                >
-                  [{a.type}] {a.name ?? a.url}
+              {imageAttachments.slice(0, 3).map((a) => (
+                <div key={a.id} className="h-24 overflow-hidden rounded-xl">
+                  {renderImageThumb(a)}
+                </div>
+              ))}
+              {videoAttachments.slice(0, 1).map((a) => (
+                <div key={a.id} className="col-span-2 h-24 overflow-hidden rounded-xl">
+                  {renderVideoThumb(a)}
                 </div>
               ))}
             </div>
@@ -117,6 +142,9 @@ function InstagramPreview({
   attachments: IdeaAttachment[];
 }) {
   const caption = body || title || "Your caption will appear here…";
+  const imageAttachments = attachments.filter((a) => a.type === "image");
+  const videoAttachments = attachments.filter((a) => a.type === "video");
+  const hasMedia = imageAttachments.length > 0 || videoAttachments.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-xs rounded-[2.5rem] border border-slate-800 bg-slate-950/90 p-3 shadow-2xl">
@@ -131,23 +159,28 @@ function InstagramPreview({
       </div>
 
       <div className="relative mb-2 aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-slate-700 via-slate-900 to-slate-950 flex items-center justify-center">
-        {attachments.length === 0 ? (
-          <span className="text-[11px] text-slate-300">
-            Add images or video to preview a post
+        {!hasMedia ? (
+          <span className="text-[11px] text-slate-300 text-center px-4">
+            Add images or video below to preview a carousel or reel.
           </span>
+        ) : videoAttachments.length > 0 ? (
+          <div className="h-full w-full overflow-hidden rounded-2xl">
+            {renderVideoThumb(videoAttachments[0], "h-full w-full object-cover")}
+          </div>
+        ) : imageAttachments.length === 1 ? (
+          <div className="h-full w-full overflow-hidden rounded-2xl">
+            {renderImageThumb(imageAttachments[0], "h-full w-full object-cover")}
+          </div>
         ) : (
           <div className="grid h-full w-full grid-cols-2 gap-1 p-2">
-            {attachments.slice(0, 3).map((a) => (
-              <div
-                key={a.id}
-                className="rounded-xl bg-slate-800/90 text-[9px] text-slate-200 flex items-center justify-center text-center px-1"
-              >
-                [{a.type}] {a.name ?? a.url}
+            {imageAttachments.slice(0, 3).map((a) => (
+              <div key={a.id} className="overflow-hidden rounded-xl">
+                {renderImageThumb(a, "h-full w-full object-cover")}
               </div>
             ))}
           </div>
         )}
-        {attachments.length > 1 && (
+        {imageAttachments.length > 1 && (
           <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
             <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
@@ -180,17 +213,19 @@ function YouTubePreview({
   const displayTitle =
     title || (body.split("\n").find(Boolean) ?? "Your video title");
   const desc = (body || outline || "").slice(0, 220);
+  const imageAttachments = attachments.filter((a) => a.type === "image");
+  const videoAttachments = attachments.filter((a) => a.type === "video");
 
   return (
     <div className="rounded-3xl border border-slate-800 bg-slate-950/90 p-4 text-sm text-slate-50 shadow-xl">
       <div className="mb-3 aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-br from-red-500/40 via-slate-900 to-slate-950 flex items-center justify-center">
-        {attachments.length === 0 ? (
-          <span className="text-[11px] text-slate-100">
-            Add a video or image to simulate a thumbnail
-          </span>
+        {videoAttachments.length > 0 ? (
+          renderVideoThumb(videoAttachments[0], "h-full w-full object-cover rounded-2xl")
+        ) : imageAttachments.length > 0 ? (
+          renderImageThumb(imageAttachments[0], "h-full w-full object-cover rounded-2xl")
         ) : (
           <span className="text-[11px] text-slate-100">
-            [{attachments[0].type}] {attachments[0].name ?? attachments[0].url}
+            Add a video or thumbnail image below to see it here.
           </span>
         )}
       </div>
@@ -213,6 +248,7 @@ function NewsletterPreview({
   title,
   body,
   outline,
+  attachments,
 }: {
   title: string;
   body: string;
@@ -221,10 +257,16 @@ function NewsletterPreview({
 }) {
   const subject = title || body.split("\n").find(Boolean) || "Your subject line";
   const content = body || outline || "Your email body will appear here…";
+  const imageAttachments = attachments.filter((a) => a.type === "image");
 
   return (
     <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4 shadow-xl">
       <div className="mx-auto max-w-md rounded-2xl bg-slate-50 p-4 text-slate-900">
+        {imageAttachments.length > 0 && (
+          <div className="mb-3 overflow-hidden rounded-xl">
+            {renderImageThumb(imageAttachments[0], "w-full max-h-48 object-cover")}
+          </div>
+        )}
         <div className="mb-2 text-[11px] text-slate-500">
           From: <span className="font-medium">Creator Brain</span> &lt;you@example.com&gt;
         </div>
