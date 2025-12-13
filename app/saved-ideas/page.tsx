@@ -139,15 +139,21 @@ export default function SavedIdeasPage() {
   const [helperInitialPlatform, setHelperInitialPlatform] = useState<
     ContentHelperModalProps["initialPlatform"]
   >();
+  const [helperInitialReferenceTweets, setHelperInitialReferenceTweets] = useState<string[]>([]);
+  const [helperInitialAttachments, setHelperInitialAttachments] = useState<Idea["attachments"]>(
+    [],
+  );
 
   const sortedIdeas = [...savedIdeas].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
   );
 
-  const openHelperForIdea = (id: string, text: string, platform?: Idea["platforms"][number]) => {
-    setHelperIdeaId(id);
-    setHelperInitialText(text);
-    setHelperInitialPlatform(mapPlatformToHelperPlatform(platform));
+  const openHelperForIdea = (idea: Idea) => {
+    setHelperIdeaId(idea.id);
+    setHelperInitialText(idea.text);
+    setHelperInitialPlatform(mapPlatformToHelperPlatform(idea.platforms[0]));
+    setHelperInitialReferenceTweets(idea.referenceTweets ?? []);
+    setHelperInitialAttachments(idea.attachments ?? []);
     setHelperOpen(true);
   };
 
@@ -194,7 +200,7 @@ export default function SavedIdeasPage() {
                 key={idea.id}
                 idea={idea}
                 onDelete={() => deleteIdea(idea.id)}
-                onOpenHelper={() => openHelperForIdea(idea.id, idea.text, idea.platforms[0])}
+                onOpenHelper={() => openHelperForIdea(idea)}
                 onChange={(patch) => updateIdea(idea.id, patch)}
               />
             ))}
@@ -211,6 +217,8 @@ export default function SavedIdeasPage() {
         open={helperOpen}
         initialText={helperInitialText}
         initialPlatform={helperInitialPlatform}
+        initialReferenceTweets={helperInitialReferenceTweets}
+        initialAttachments={helperInitialAttachments ?? []}
         onClose={() => setHelperOpen(false)}
         onApplySuggestion={handleApplySuggestion}
       />

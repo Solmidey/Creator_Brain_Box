@@ -4,14 +4,14 @@ export type EnergyLevel = 1 | 2 | 3 | 4 | 5;
 export type IdeaStatus = "Inbox" | "Ready" | "Drafting" | "Posted";
 export type NextAction = "brain_dump" | "outline" | "publish";
 
-export type AttachmentType = "image" | "video" | "audio" | "document" | "other";
-
-export type Attachment = {
+export type IdeaAttachment = {
   id: string;
-  type: AttachmentType;
-  name: string;
-  size: number;
-  mimeType: string;
+  type: "image" | "video" | "file" | "link" | "audio" | "document" | "other";
+  url: string;
+  name?: string;
+  description?: string;
+  size?: number;
+  mimeType?: string;
   dataUrl?: string;
 };
 
@@ -25,8 +25,8 @@ export type Idea = {
   nextAction: NextAction;
   createdAt: string;
   updatedAt: string;
-  attachments?: Attachment[];
   referenceTweets?: string[];
+  attachments?: IdeaAttachment[];
 };
 
 export type Filters = {

@@ -2,7 +2,12 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import type { ContentType, EnergyLevel, Platform } from "../types/ideas";
+import type {
+  ContentType,
+  EnergyLevel,
+  IdeaAttachment,
+  Platform,
+} from "../types/ideas";
 import { useSavedIdeas, type Idea } from "../hooks/useSavedIdeas";
 
 type ContentHelperMode =
@@ -34,6 +39,8 @@ export type ContentHelperModalProps = {
   open: boolean;
   initialText: string;
   initialPlatform?: "x" | "linkedin" | "instagram" | "youtube" | "newsletter";
+  initialReferenceTweets?: string[];
+  initialAttachments?: IdeaAttachment[];
   onClose: () => void;
   onApplySuggestion?: (newText: string) => void;
   onSaveIdea?: (idea: Idea) => void;
@@ -77,6 +84,8 @@ export function ContentHelperModal({
   open,
   initialText,
   initialPlatform,
+  initialReferenceTweets,
+  initialAttachments,
   onClose,
   onApplySuggestion,
   onSaveIdea,
@@ -84,6 +93,8 @@ export function ContentHelperModal({
   const { saveIdea } = useSavedIdeas();
   const [mode, setMode] = useState<ContentHelperMode>("polish");
   const [text, setText] = useState(initialText ?? "");
+  const [referenceTweets, setReferenceTweets] = useState<string[]>(initialReferenceTweets ?? []);
+  const [attachments, setAttachments] = useState<IdeaAttachment[]>(initialAttachments ?? []);
   const [platforms, setPlatforms] = useState<Platform[]>(
     helperToPlatform(initialPlatform) ? [helperToPlatform(initialPlatform)!] : [],
   );
@@ -99,6 +110,8 @@ export function ContentHelperModal({
     if (open) {
       setText(initialText ?? "");
       setPlatforms(helperToPlatform(initialPlatform) ? [helperToPlatform(initialPlatform)!] : []);
+      setReferenceTweets(initialReferenceTweets ?? []);
+      setAttachments(initialAttachments ?? []);
       setContentType("hook");
       setEnergy(3);
       setIncludeReferences(true);
@@ -107,7 +120,7 @@ export function ContentHelperModal({
       setMode("polish");
       setHasSaved(false);
     }
-  }, [open, initialPlatform, initialText]);
+  }, [open, initialPlatform, initialText, initialReferenceTweets, initialAttachments]);
 
   useEffect(() => {
     setHasSaved(false);
@@ -130,6 +143,15 @@ export function ContentHelperModal({
     setError(null);
     setSuggestion("");
     try {
+      const activeReferenceTweets = includeReferences ? referenceTweets : [];
+      const activeAttachments = includeReferences ? attachments : [];
+      const attachmentsSummary = activeAttachments
+        .map((a) => {
+          const base = `[${a.type}] ${a.name ?? a.url}`;
+          return a.description ? `${base} – ${a.description}` : base;
+        })
+        .join("\n");
+
       const response = await fetch("/api/helper", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -139,8 +161,8 @@ export function ContentHelperModal({
           ideaText: text.trim(),
           contentType,
           energy,
-          referenceTweets: includeReferences ? [] : [],
-          attachmentsSummary: "",
+          referenceTweets: activeReferenceTweets,
+          attachmentsSummary,
         }),
       });
 
@@ -196,8 +218,8 @@ export function ContentHelperModal({
       energy,
       createdAt: now,
       updatedAt: now,
-      attachments: [],
-      referenceTweets: [],
+      attachments,
+      referenceTweets,
     };
 
     saveIdea(newIdea);
@@ -265,6 +287,34 @@ export function ContentHelperModal({
                 placeholder="Paste your idea here"
               />
             </div>
+
+            {(referenceTweets.length > 0 || attachments.length > 0) && (
+              <div className="mt-3 rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-[11px] text-slate-300 space-y-1">
+                <div className="font-semibold text-[11px] text-slate-200">Context used</div>
+                {referenceTweets.length > 0 && (
+                  <div>
+                    <span className="font-medium">Tweets:</span>
+                    <ul className="mt-1 list-disc pl-4 space-y-0.5">
+                      {referenceTweets.map((url) => (
+                        <li key={url} className="truncate">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {attachments.length > 0 && (
+                  <div>
+                    <span className="font-medium">Media:</span>
+                    <ul className="mt-1 list-disc pl-4 space-y-0.5">
+                      {attachments.map((a) => (
+                        <li key={a.id} className="truncate">
+                          {a.name ?? a.url} {a.description ? `– ${a.description}` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <p className="text-sm font-medium text-slate-900 dark:text-slate-50">Platforms</p>
