@@ -1,99 +1,118 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { useEthersWallet } from "../hooks/useEthersWallet";
 
-function formatAddress(addr: string) {
-  if (!addr) return "";
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-}
+export default function HeroHeader() {
+  const { address, isConnected, isConnecting, connect, disconnect } =
+    useEthersWallet();
 
-function HeroHeader() {
-  const {
-    account,
-    chainId,
-    isConnected,
-    isConnecting,
-    error,
-    connectWallet,
-    disconnectWallet,
-  } = useEthersWallet();
+  const shortAddress = React.useMemo(
+    () =>
+      address ? `${address.slice(0, 6)}…${address.slice(address.length - 4)}` : "",
+    [address],
+  );
 
   return (
-    <section className="relative mt-8 w-full rounded-3xl border border-slate-800/70 bg-slate-950/80 px-6 py-8 shadow-[0_0_80px_rgba(56,189,248,0.25)] backdrop-blur md:px-10 md:py-10">
-      <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-        <div className="max-w-xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-400">
-            Creator Brain Box
-          </p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">
-            Vault For Your Cracked Ideas
-          </h1>
-          <p className="mt-4 text-sm text-slate-300 sm:text-base">
-            Capture, sort, and play with every idea you don&apos;t want to lose.
-            Turn scattered thoughts into ready-to-post content.
-          </p>
+    <section className="flex flex-col gap-6 rounded-3xl border bg-gradient-to-b from-slate-900 via-slate-950 to-black px-6 py-8 text-slate-50 md:flex-row md:items-center md:justify-between">
+      <div className="space-y-4 md:max-w-xl">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-sky-300">
+          Creator Brain Box
+        </p>
+        <h1 className="text-balance text-3xl font-semibold leading-tight md:text-4xl">
+          Turn scattered ideas into an organised library you can even back up on{" "}
+          <span className="text-sky-300">Base</span>.
+        </h1>
+        <p className="text-sm text-slate-300">
+          Capture ideas, tag them, and build your personal knowledge library.
+          Everything lives in your browser first. When it really matters, you
+          can push a snapshot onchain.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={isConnected ? disconnect : connect}
+            disabled={isConnecting}
+            className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 shadow-md shadow-sky-500/30 hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isConnecting
+              ? "Connecting..."
+              : isConnected
+              ? `Disconnect ${shortAddress}`
+              : "Connect wallet (Base)"}
+          </button>
+
+          <Link
+            href="/saved-ideas"
+            className="text-sm font-medium text-sky-300 underline-offset-4 hover:underline"
+          >
+            Save ideas onchain →
+          </Link>
         </div>
 
-        <div className="max-w-sm space-y-4 md:text-right">
-          <div>
-            <p className="text-sm font-medium text-slate-100">
-              Capture, sort, and play with your ideas.
-            </p>
-            <p className="mt-1 text-xs text-slate-400">
-              Keep your brain inbox organized, then crack ideas open when
-              it&apos;s time to create.
-            </p>
+        {isConnected ? (
+          <p className="text-xs text-sky-200/80">
+            Connected as <span className="font-mono">{shortAddress}</span>. Your
+            ideas are always local-first — you choose what to back up onchain.
+          </p>
+        ) : (
+          <p className="text-xs text-slate-400">
+            No wallet needed for local saving. Connect when you&apos;re ready to
+            sync to Base.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-4 w-full max-w-sm md:mt-0">
+        <div className="relative overflow-hidden rounded-2xl border border-sky-500/40 bg-slate-900/60 p-4 shadow-lg shadow-sky-500/20">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+                Library preview
+              </p>
+              <p className="text-xs text-slate-300">
+                One place for your saved ideas and references.
+              </p>
+            </div>
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/20 text-lg">
+              📚
+            </span>
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center gap-3 md:justify-end">
-            <button
-              type="button"
-              onClick={isConnected ? disconnectWallet : connectWallet}
-              className="rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-70"
-              disabled={isConnecting}
-            >
-              {isConnecting
-                ? "Connecting..."
-                : isConnected && account
-                ? formatAddress(account)
-                : "Connect wallet"}
-            </button>
+          <div className="space-y-2 rounded-xl bg-gradient-to-r from-sky-500/25 via-cyan-400/15 to-indigo-500/25 p-3">
+            <div className="flex items-start gap-2">
+              <div className="mt-1 h-8 w-8 flex-shrink-0 rounded-lg bg-sky-500/40" />
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-slate-50">
+                  Clip: &ldquo;Build once, reuse often&rdquo;
+                </p>
+                <p className="text-[11px] text-slate-200/80">
+                  Turn your best ideas into reusable building blocks for
+                  threads, videos, newsletters, and client work.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-slate-300/90">
+              <span>3 tags • 5 linked posts</span>
+              <span className="rounded-full bg-slate-950/40 px-2 py-0.5 font-medium text-sky-200">
+                Local + Base ready
+              </span>
+            </div>
+          </div>
 
+          <div className="mt-3 flex items-center justify-between text-[10px] text-slate-400">
+            <span>Local-first. Onchain when you choose.</span>
             <Link
               href="/saved-ideas"
-              className="rounded-full bg-slate-900/80 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-slate-800"
+              className="font-medium text-sky-300 hover:text-sky-200"
             >
-              View saved ideas
-            </Link>
-            <Link
-              href="/brain-forge"
-              className="rounded-full border border-slate-700/80 px-4 py-2 text-xs font-medium uppercase tracking-wide text-slate-200 hover:border-sky-500/70"
-            >
-              Brain Forge
-            </Link>
-            <Link
-              href="/library"
-              className="rounded-full border border-slate-800 px-4 py-2 text-xs font-medium text-slate-300 hover:border-slate-600"
-            >
-              Library
+              Open ideas →
             </Link>
           </div>
-
-          {error && (
-            <p className="mt-1 text-xs text-rose-400 md:text-right">{error}</p>
-          )}
-
-          {isConnected && chainId !== 8453 && (
-            <p className="mt-1 text-xs text-amber-400 md:text-right">
-              Connected to chain {chainId}. Base mainnet is 8453.
-            </p>
-          )}
         </div>
       </div>
     </section>
   );
 }
-
-export default HeroHeader;
-export { HeroHeader };

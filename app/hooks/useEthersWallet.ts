@@ -1,101 +1,182 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { BrowserProvider } from "ethers";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { BrowserProvider, JsonRpcSigner } from "ethers";
 
-const BASE_CHAIN_ID_HEX = "0x2105"; // 8453
-
-export interface UseEthersWalletResult {
-  account: string | null;
-  chainId: number | null;
-  isConnected: boolean;
+type EthersWalletContextValue = {
+  address: string | null;
   isConnecting: boolean;
-  error: string | null;
-  connectWallet: () => Promise<void>;
-  disconnectWallet: () => void;
-}
+  isConnected: boolean;
+  connect: () => Promise<void>;
+  disconnect: () => void;
+  provider: BrowserProvider | null;
+  signer: JsonRpcSigner | null;
+};
 
-export function useEthersWallet(): UseEthersWalletResult {
-  const [account, setAccount] = useState<string | null>(null);
-  const [chainId, setChainId] = useState<number | null>(null);
+const WalletContext = createContext<EthersWalletContextValue | undefined>(
+  undefined,
+);
+
+const STORAGE_KEY = "cbx:walletAddress";
+const BASE_CHAIN_ID_HEX = "0x2105"; // Base mainnet (8453)
+
+export function EthersWalletProvider({ children }: { children: ReactNode }) {
+  const [address, setAddress] = useState<string | null>(null);
+  const [provider, setProvider] = useState<BrowserProvider | null>(null);
+  const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const connectWallet = useCallback(async () => {
-    try {
-      setIsConnecting(true);
-      setError(null);
+  // Helper: clear all wallet state
+  const clearState = () => {
+    setAddress(null);
+    setProvider(null);
+    setSigner(null);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  };
 
-      if (typeof window === "undefined") {
-        setError("Wallet can only be connected in the browser.");
-        return;
-      }
+  // Auto-reconnect on load if we have a stored address
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
-      const ethereum = (window as any).ethereum;
-      if (!ethereum) {
-        setError("No wallet found. Install MetaMask or a Base-compatible wallet.");
-        return;
-      }
+    const storedAddress = window.localStorage.getItem(STORAGE_KEY);
+    if (!storedAddress) return;
 
-      // Make sure we are on Base mainnet
+    const eth = (window as any).ethereum;
+    if (!eth) return;
+
+    const browserProvider = new BrowserProvider(eth);
+    setProvider(browserProvider);
+
+    (async () => {
       try {
-        await ethereum.request({
+        // Make sure we're on Base
+        try {
+          await eth.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: BASE_CHAIN_ID_HEX }],
+          });
+        } catch {
+          // If it fails, we still keep them "connected" to whatever chain they're on,
+          // but onchain writes may fail. No hard crash here.
+        }
+
+        const signer = await browserProvider.getSigner();
+        const addr = await signer.getAddress();
+
+        setSigner(signer);
+        setAddress(addr);
+        window.localStorage.setItem(STORAGE_KEY, addr);
+      } catch (err) {
+        console.error("Auto-reconnect failed:", err);
+        clearState();
+      }
+    })();
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (!accounts || accounts.length === 0) {
+        clearState();
+        return;
+      }
+      setAddress(accounts[0]);
+      window.localStorage.setItem(STORAGE_KEY, accounts[0]);
+    };
+
+    const handleDisconnect = () => {
+      clearState();
+    };
+
+    eth.on?.("accountsChanged", handleAccountsChanged);
+    eth.on?.("disconnect", handleDisconnect);
+
+    return () => {
+      eth.removeListener?.("accountsChanged", handleAccountsChanged);
+      eth.removeListener?.("disconnect", handleDisconnect);
+    };
+  }, []);
+
+  const connect = async () => {
+    if (typeof window === "undefined") return;
+
+    const eth = (window as any).ethereum;
+    if (!eth) {
+      alert("No wallet found. Install MetaMask or any Base-compatible wallet.");
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      // Force/suggest Base mainnet
+      try {
+        await eth.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: BASE_CHAIN_ID_HEX }],
         });
-      } catch (err: any) {
-        if (err?.code === 4902) {
-          // Chain not added yet – add Base
-          await ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [
-              {
-                chainId: BASE_CHAIN_ID_HEX,
-                chainName: "Base",
-                rpcUrls: ["https://mainnet.base.org"],
-                nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-                blockExplorerUrls: ["https://basescan.org"],
-              },
-            ],
-          });
-        } else {
-          throw err;
-        }
+      } catch (switchError: any) {
+        console.warn("Could not switch to Base:", switchError);
       }
 
-      const provider = new BrowserProvider(ethereum);
-      const accounts: string[] = await provider.send("eth_requestAccounts", []);
+      const accounts: string[] = await eth.request({
+        method: "eth_requestAccounts",
+      });
+
       if (!accounts || accounts.length === 0) {
-        setError("No account returned from wallet.");
+        clearState();
         return;
       }
 
-      const network = await provider.getNetwork();
+      const browserProvider = new BrowserProvider(eth);
+      const signer = await browserProvider.getSigner();
+      const addr = await signer.getAddress();
 
-      setAccount(accounts[0]);
-      setChainId(Number(network.chainId));
-    } catch (err: any) {
-      console.error("connectWallet error", err);
-      setError(err?.message ?? "Failed to connect wallet.");
+      setProvider(browserProvider);
+      setSigner(signer);
+      setAddress(addr);
+      window.localStorage.setItem(STORAGE_KEY, addr);
+    } catch (err) {
+      console.error("Wallet connect failed:", err);
+      clearState();
     } finally {
       setIsConnecting(false);
     }
-  }, []);
-
-  const disconnectWallet = useCallback(() => {
-    // We can't force-disconnect the wallet, but we can clear local state
-    setAccount(null);
-    setChainId(null);
-    setError(null);
-  }, []);
-
-  return {
-    account,
-    chainId,
-    isConnected: !!account,
-    isConnecting,
-    error,
-    connectWallet,
-    disconnectWallet,
   };
+
+  const disconnect = () => {
+    clearState();
+  };
+
+  const value: EthersWalletContextValue = useMemo(
+    () => ({
+      address,
+      isConnecting,
+      isConnected: !!address,
+      connect,
+      disconnect,
+      provider,
+      signer,
+    }),
+    [address, isConnecting, provider, signer],
+  );
+
+  return (
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
+  );
+}
+
+export function useEthersWallet() {
+  const ctx = useContext(WalletContext);
+  if (!ctx) {
+    throw new Error(
+      "useEthersWallet must be used inside an <EthersWalletProvider>",
+    );
+  }
+  return ctx;
 }
