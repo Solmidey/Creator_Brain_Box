@@ -2,12 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import type {
-  ContentType,
-  EnergyLevel,
-  Idea,
-  Platform,
-} from "../types/ideas";
+import type { ContentType, EnergyLevel, Platform } from "../types/ideas";
+import { useSavedIdeas, type Idea } from "../hooks/useSavedIdeas";
 
 type ContentHelperMode =
   | "polish"
@@ -40,7 +36,7 @@ export type ContentHelperModalProps = {
   initialPlatform?: "x" | "linkedin" | "instagram" | "youtube" | "newsletter";
   onClose: () => void;
   onApplySuggestion?: (newText: string) => void;
-  onSaveIdea?: (payload: Omit<Idea, "id" | "createdAt" | "updatedAt">) => void;
+  onSaveIdea?: (idea: Idea) => void;
 };
 
 function platformToHelper(platform?: Platform): HelperPlatform {
@@ -85,6 +81,7 @@ export function ContentHelperModal({
   onApplySuggestion,
   onSaveIdea,
 }: ContentHelperModalProps) {
+  const { saveIdea } = useSavedIdeas();
   const [mode, setMode] = useState<ContentHelperMode>("polish");
   const [text, setText] = useState(initialText ?? "");
   const [platforms, setPlatforms] = useState<Platform[]>(
@@ -96,6 +93,7 @@ export function ContentHelperModal({
   const [suggestion, setSuggestion] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -107,8 +105,13 @@ export function ContentHelperModal({
       setSuggestion("");
       setError(null);
       setMode("polish");
+      setHasSaved(false);
     }
   }, [open, initialPlatform, initialText]);
+
+  useEffect(() => {
+    setHasSaved(false);
+  }, [suggestion, initialText]);
 
   const togglePlatform = (platform: Platform) => {
     setPlatforms((prev) =>
@@ -122,6 +125,7 @@ export function ContentHelperModal({
   );
 
   const submitHelper = async () => {
+    setHasSaved(false);
     setLoading(true);
     setError(null);
     setSuggestion("");
@@ -166,19 +170,39 @@ export function ContentHelperModal({
     }
   };
 
-  const handleSave = () => {
-    if (!suggestion.trim() || !onSaveIdea) return;
-    onSaveIdea({
-      text: suggestion.trim(),
-      platforms,
+  const handleSaveSuggestionAsIdea = () => {
+    const trimmed = suggestion.trim();
+    if (!trimmed) return;
+
+    const platformsArray =
+      Array.isArray(platforms) && platforms.length > 0
+        ? platforms
+        : platforms
+          ? [platforms].flat()
+          : [];
+
+    const now = new Date().toISOString();
+
+    const newIdea: Idea = {
+      id:
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : String(Date.now()),
+      text: trimmed,
       contentType,
+      status: "Ready",
+      nextAction: "outline",
+      platforms: platformsArray,
       energy,
-      status: "Inbox",
-      nextAction: "brain_dump",
+      createdAt: now,
+      updatedAt: now,
       attachments: [],
       referenceTweets: [],
-    });
-    onClose();
+    };
+
+    saveIdea(newIdea);
+    onSaveIdea?.(newIdea);
+    setHasSaved(true);
   };
 
   const handleReplace = () => {
@@ -335,11 +359,11 @@ export function ContentHelperModal({
                 </button>
                 <button
                   type="button"
-                  onClick={handleSave}
-                  disabled={!suggestion || !onSaveIdea}
-                  className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 shadow-sm hover:border-blue-300 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-100 disabled:opacity-50"
+                  onClick={handleSaveSuggestionAsIdea}
+                  disabled={!suggestion.trim() || loading}
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold transition bg-violet-500 text-white shadow hover:bg-violet-600 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  Save as new idea
+                  {hasSaved ? "Saved to Saved Ideas" : "Save to Saved Ideas"}
                 </button>
                 {onApplySuggestion && (
                   <button

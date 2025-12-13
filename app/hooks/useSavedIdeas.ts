@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-import type { Idea } from "../types/ideas";
+import type { Idea as BaseIdea } from "../types/ideas";
+
+export type Idea = BaseIdea;
 
 const STORAGE_KEY = "creator-brain-inbox-ideas";
 
