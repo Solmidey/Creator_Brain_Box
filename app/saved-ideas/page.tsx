@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 
 import { ContentHelperModal, type ContentHelperModalProps } from "../components/ContentHelperModal";
+import { useOnchainSync } from "../hooks/useOnchainSync";
 import { useSavedIdeas, type Idea } from "../hooks/useSavedIdeas";
 
 const STATUS_OPTIONS: Idea["status"][] = ["Inbox", "Ready", "Drafting", "Posted"];
@@ -33,9 +34,20 @@ type SavedIdeaCardProps = {
   onDelete: () => void;
   onOpenHelper: () => void;
   onChange: (patch: Partial<Idea>) => void;
+  onSaveOnchain: () => Promise<void>;
+  isConnected: boolean;
+  isSavingOnchain: boolean;
 };
 
-function SavedIdeaCard({ idea, onDelete, onOpenHelper, onChange }: SavedIdeaCardProps) {
+function SavedIdeaCard({
+  idea,
+  onDelete,
+  onOpenHelper,
+  onChange,
+  onSaveOnchain,
+  isConnected,
+  isSavingOnchain,
+}: SavedIdeaCardProps) {
   const [localText, setLocalText] = useState(idea.text);
   const [localStatus, setLocalStatus] = useState(idea.status);
   const [localNextAction, setLocalNextAction] = useState(idea.nextAction);
@@ -111,6 +123,16 @@ function SavedIdeaCard({ idea, onDelete, onOpenHelper, onChange }: SavedIdeaCard
           <span className="text-slate-400 dark:text-slate-500">Platforms: {idea.platforms.join(", ") || "None"}</span>
         </div>
         <div className="flex flex-col items-end gap-2">
+          {isConnected && (
+            <button
+              type="button"
+              disabled={isSavingOnchain}
+              onClick={onSaveOnchain}
+              className="rounded-full border border-emerald-500/60 px-3 py-1 text-[10px] font-medium text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-60"
+            >
+              {isSavingOnchain ? "Saving…" : "Save onchain"}
+            </button>
+          )}
           <button
             type="button"
             onClick={onOpenHelper}
@@ -133,6 +155,7 @@ function SavedIdeaCard({ idea, onDelete, onOpenHelper, onChange }: SavedIdeaCard
 
 export default function SavedIdeasPage() {
   const { savedIdeas, updateIdea, deleteIdea } = useSavedIdeas();
+  const { isConnected, saveIdeaOnchain, isSaving } = useOnchainSync();
   const [helperOpen, setHelperOpen] = useState(false);
   const [helperIdeaId, setHelperIdeaId] = useState<string | null>(null);
   const [helperInitialText, setHelperInitialText] = useState("");
@@ -202,6 +225,14 @@ export default function SavedIdeasPage() {
                 onDelete={() => deleteIdea(idea.id)}
                 onOpenHelper={() => openHelperForIdea(idea)}
                 onChange={(patch) => updateIdea(idea.id, patch)}
+                isConnected={isConnected}
+                isSavingOnchain={isSaving}
+                onSaveOnchain={() =>
+                  saveIdeaOnchain({
+                    ideaId: idea.id,
+                    hashOrCid: "TODO:compute-hash-or-cid",
+                  })
+                }
               />
             ))}
             {sortedIdeas.length === 0 && (

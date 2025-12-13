@@ -1,5 +1,6 @@
 "use client";
 
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 
 export default function HeroHeader({ onOpenHelper }: { onOpenHelper: () => void }) {
@@ -30,6 +31,15 @@ export default function HeroHeader({ onOpenHelper }: { onOpenHelper: () => void 
           </div>
 
           <div className="mt-1 flex flex-wrap gap-3 sm:mt-0 sm:justify-end">
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:block">
+                <ConnectButton accountStatus="address" showBalance={false} chainStatus="icon" />
+              </div>
+              <div className="sm:hidden">
+                <ConnectButton accountStatus="avatar" showBalance={false} chainStatus="none" />
+              </div>
+            </div>
+
             <Link
               href="/saved-ideas"
               className="inline-flex items-center justify-center rounded-full bg-violet-500 px-4 py-2 text-sm font-medium text-white shadow-[0_10px_30px_rgba(139,92,246,0.6)] transition-transform hover:-translate-y-[1px] hover:bg-violet-600 active:translate-y-0"
@@ -43,11 +53,11 @@ export default function HeroHeader({ onOpenHelper }: { onOpenHelper: () => void 
               Brain Forge
             </Link>
             <Link
-  href="/library"
-  className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs font-medium text-slate-100 hover:border-sky-500"
->
-  Library
-</Link>
+              href="/library"
+              className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs font-medium text-slate-100 hover:border-sky-500"
+            >
+              Library
+            </Link>
 
             <button
               type="button"
