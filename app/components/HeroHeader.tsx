@@ -36,6 +36,12 @@ export default function HeroHeader({ onOpenHelper }: { onOpenHelper: () => void 
             >
               View saved ideas
             </Link>
+            <Link
+              href="/brain-forge"
+              className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs font-medium text-slate-100 hover:border-sky-500"
+            >
+              Brain Forge
+            </Link>
             <button
               type="button"
               onClick={onOpenHelper}
