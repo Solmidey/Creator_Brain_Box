@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import type { IdeaAttachment } from "../types/ideas";
-
 export type MediaKind = "image" | "video" | "file";
 
 export interface MediaItem {
@@ -12,8 +10,8 @@ export interface MediaItem {
   url: string;
   name: string;
   size?: number;
-  createdAt: string; // ISO string
-  sourceIdeaId?: string; // optional for future use
+  createdAt: string;       // ISO string
+  sourceIdeaId?: string;   // optional link back to an idea
 }
 
 const STORAGE_KEY = "creator-brain-media-library-v1";
@@ -21,98 +19,89 @@ const STORAGE_KEY = "creator-brain-media-library-v1";
 export function useMediaLibrary() {
   const [items, setItems] = useState<MediaItem[]>([]);
 
-  // load from localStorage on mount (client only)
+  // Load from localStorage on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
     try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
       const parsed = JSON.parse(raw) as MediaItem[];
       setItems(parsed);
-    } catch {
-      // ignore malformed data
+    } catch (err) {
+      console.error("[mediaLibrary] Failed to read storage", err);
     }
   }, []);
 
-  const persist = useCallback((next: MediaItem[]) => {
-    setItems(next);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    }
-  }, []);
-
-  const addItems = useCallback(
-    (newItems: MediaItem[]) => {
-      persist([...newItems, ...items]);
+  // Helper to update state + localStorage in one place
+  const persist = useCallback(
+    (updater: (prev: MediaItem[]) => MediaItem[]) => {
+      setItems(prev => {
+        const next = updater(prev);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        }
+        return next;
+      });
     },
-    [items, persist],
+    []
   );
 
+  // Add items from uploaded File objects
   const addFromFiles = useCallback(
     (files: File[], sourceIdeaId?: string) => {
       if (!files.length) return;
       const now = new Date().toISOString();
-      const newItems: MediaItem[] = files.map((file) => {
-        const isVideo = file.type.startsWith("video");
-        const kind: MediaKind = isVideo ? "video" : "image";
-        const url = URL.createObjectURL(file); // client preview; fine for local library
 
-        return {
-          id: `${now}-${file.name}-${Math.random().toString(36).slice(2)}`,
-          type: kind,
-          url,
-          name: file.name,
-          size: file.size,
-          createdAt: now,
-          sourceIdeaId,
-        };
-      });
-      addItems(newItems);
+      persist(prev => [
+        ...files.map(file => {
+          const kind: MediaKind = file.type.startsWith("video")
+            ? "video"
+            : file.type.startsWith("image")
+            ? "image"
+            : "file";
+
+          const url = URL.createObjectURL(file);
+
+          return {
+            id: `${now}-${file.name}-${Math.random().toString(36).slice(2)}`,
+            type: kind,
+            url,
+            name: file.name,
+            size: file.size,
+            createdAt: now,
+            sourceIdeaId,
+          } as MediaItem;
+        }),
+        ...prev,
+      ]);
     },
-    [addItems],
+    [persist]
   );
 
-  const addFromAttachment = useCallback(
-    (attachment: IdeaAttachment, sourceIdeaId?: string) => {
-      const now = new Date().toISOString();
-      const kind: MediaKind =
-        attachment.type === "image" || attachment.type === "video"
-          ? attachment.type
-          : "file";
-
-      const item: MediaItem = {
-        id: `${now}-${attachment.id}`,
-        type: kind,
-        url: attachment.url,
-        name: attachment.name ?? attachment.url,
-        createdAt: now,
-        sourceIdeaId,
-      };
-
-      addItems([item]);
+  // Add a fully-formed MediaItem (for future use if needed)
+  const addItem = useCallback(
+    (item: MediaItem) => {
+      persist(prev => [item, ...prev]);
     },
-    [addItems],
+    [persist]
   );
 
   const removeItem = useCallback(
     (id: string) => {
-      const next = items.filter((i) => i.id !== id);
-      persist(next);
+      persist(prev => prev.filter(item => item.id !== id));
     },
-    [items, persist],
+    [persist]
   );
 
   const clearAll = useCallback(() => {
-    persist([]);
+    persist(() => []);
   }, [persist]);
 
   return {
     items,
     addFromFiles,
-    addFromAttachment,
+    addItem,
     removeItem,
     clearAll,
   };
 }
-
-export default useMediaLibrary;
