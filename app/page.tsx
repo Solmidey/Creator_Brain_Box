@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type DragEvent } from "react";
 import HeroHeader from "./components/HeroHeader";
-import { TiltCard } from "./components/TiltCard";
 import { ContentHelperModal, type ContentHelperModalProps } from "./components/ContentHelperModal";
 import { useSavedIdeas } from "./hooks/useSavedIdeas";
 import type {
@@ -48,14 +47,6 @@ const NEXT_ACTION_LABELS: Record<NextAction, string> = {
   outline: "Outline",
   publish: "Publish",
 };
-
-function formatDate(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-}
 
 function getISODate(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -256,61 +247,6 @@ function FilterPanel({
     </div>
   );
 }
-
-function AttachmentStrip({
-  attachments,
-  onOpen,
-}: {
-  attachments: Attachment[];
-  onOpen: () => void;
-}) {
-  const preview = attachments.slice(0, 3);
-  const remaining = attachments.length - preview.length;
-
-  return (
-      <button
-        type="button"
-        onClick={onOpen}
-        className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
-      >
-      {preview.map((attachment) => (
-          <div
-            key={attachment.id}
-            className="flex items-center gap-1 rounded-md bg-white px-2 py-1 shadow-inner dark:bg-slate-800/70"
-          >
-          {attachment.type === "image" && attachment.dataUrl ? (
-            <Image
-              src={attachment.dataUrl}
-              alt={attachment.name}
-              width={40}
-              height={40}
-              unoptimized
-              className="h-10 w-10 rounded object-cover"
-            />
-          ) : (
-            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-              {attachment.type === "document"
-                ? "DOC"
-                : attachment.type === "video"
-                  ? "VID"
-                  : attachment.type === "audio"
-                    ? "AUD"
-                    : "FILE"}
-            </span>
-          )}
-          <span className="text-[11px] text-slate-600 dark:text-slate-300 truncate max-w-[80px]">
-            {attachment.name}
-          </span>
-        </div>
-      ))}
-        {remaining > 0 && (
-          <span className="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 shadow-inner dark:bg-slate-800/70 dark:text-slate-200">
-            +{remaining}
-          </span>
-        )}
-      </button>
-    );
-  }
 
 function AttachmentModal({
   open,
@@ -717,61 +653,44 @@ function IdeaCard({ idea, onAskHelper }: { idea: Idea; onAskHelper: (idea: Idea)
   const [showAttachments, setShowAttachments] = useState(false);
 
   return (
-    <TiltCard
+    <div
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", idea.id);
         e.dataTransfer.effectAllowed = "move";
       }}
-      className="border border-slate-200/80 bg-white/90 p-3 shadow-sm hover:border-blue-200 dark:border-slate-800 dark:bg-slate-900/80"
+      className="group rounded-xl border border-slate-800 bg-slate-900/90 px-3 py-2 text-xs text-slate-100 shadow-sm transition-colors hover:border-sky-500/70 hover:bg-slate-900"
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm text-slate-900 dark:text-slate-50 mb-3 break-words overflow-hidden flex-1">
-          {idea.text}
-        </p>
+      <p className="line-clamp-3 text-[11px] leading-snug text-slate-200">{idea.text}</p>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <span className="text-[10px] uppercase tracking-wide text-slate-500">
+          {CONTENT_TYPES.find((c) => c.value === idea.contentType)?.label ?? idea.contentType} • {idea.platforms.join(", ")}
+        </span>
         <button
           type="button"
           onClick={() => onAskHelper(idea)}
-          className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-100 dark:hover:bg-blue-500/20"
+          className="rounded-full bg-sky-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-sky-400"
         >
-          Ask Helper
+          Ask helper
         </button>
       </div>
-      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
-        {idea.platforms.map((platform) => (
-          <Badge
-            key={platform}
-            label={platform}
-            colorClasses="bg-slate-100 text-slate-700 dark:text-slate-200"
-          />
-        ))}
-        <Badge
-          label={CONTENT_TYPES.find((c) => c.value === idea.contentType)?.label ?? idea.contentType}
-          colorClasses="bg-amber-100 text-amber-700"
-        />
-        <Badge label={`⚡${idea.energy}`} colorClasses="bg-indigo-100 text-indigo-700" />
-        <Badge label={NEXT_ACTION_LABELS[idea.nextAction]} colorClasses={getNextActionColor(idea.nextAction)} />
-      </div>
-      <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-300">Created {formatDate(idea.createdAt)}</p>
 
-      {idea.attachments && idea.attachments.length > 0 && (
-        <AttachmentStrip attachments={idea.attachments} onOpen={() => setShowAttachments(true)} />
-      )}
-
-      {idea.referenceTweets && idea.referenceTweets.length > 0 && (
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-          <span className="font-semibold text-slate-800 dark:text-slate-200">References:</span>
-          {idea.referenceTweets.map((link, index) => (
-            <a
-              key={link}
-              href={link}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-200"
+      {(idea.attachments?.length || idea.referenceTweets?.length) && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-300">
+          {idea.attachments && idea.attachments.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowAttachments(true)}
+              className="rounded-full border border-slate-700 px-2 py-1 text-[11px] font-semibold text-slate-200 transition hover:border-sky-500/70 hover:text-sky-100"
             >
-              {`Tweet #${index + 1}`}
-            </a>
-          ))}
+              {idea.attachments.length} attachment{idea.attachments.length > 1 ? "s" : ""}
+            </button>
+          )}
+          {idea.referenceTweets && idea.referenceTweets.length > 0 && (
+            <span className="rounded-full border border-slate-700 px-2 py-1 text-[11px] font-semibold text-slate-200">
+              {idea.referenceTweets.length} reference{idea.referenceTweets.length > 1 ? "s" : ""}
+            </span>
+          )}
         </div>
       )}
 
@@ -780,60 +699,66 @@ function IdeaCard({ idea, onAskHelper }: { idea: Idea; onAskHelper: (idea: Idea)
         attachments={idea.attachments ?? []}
         onClose={() => setShowAttachments(false)}
       />
-    </TiltCard>
+    </div>
   );
 }
 
-function IdeaColumn({
-  status,
+function StatusColumn({
+  title,
+  count,
   ideas,
   onDrop,
   onAskHelper,
 }: {
-  status: IdeaStatus;
+  title: IdeaStatus;
+  count: number;
   ideas: Idea[];
   onDrop: (id: string, status: IdeaStatus) => void;
   onAskHelper: (idea: Idea) => void;
 }) {
   const [isOver, setIsOver] = useState(false);
 
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const id = event.dataTransfer.getData("text/plain");
+    if (id) {
+      onDrop(id, title);
+    }
+    setIsOver(false);
+  };
+
   return (
-    <div
-      onDragOver={(e) => {
-        e.preventDefault();
-        setIsOver(true);
-      }}
-      onDragLeave={() => setIsOver(false)}
-      onDrop={(e) => {
-        e.preventDefault();
-        const id = e.dataTransfer.getData("text/plain");
-        if (id) {
-          onDrop(id, status);
-        }
-        setIsOver(false);
-      }}
-      className={`flex min-h-[120px] flex-col gap-3 rounded-2xl border p-3 transition ${
-        isOver
-          ? "border-blue-400 bg-blue-50/40 dark:border-blue-400 dark:bg-blue-500/10"
-          : "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/60"
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{status}</p>
-        <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 dark:text-slate-300 shadow-sm">
-          {ideas.length}
-        </span>
+    <div className="flex flex-col rounded-2xl border border-slate-800/70 bg-slate-900/70 px-3 py-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-slate-50">{title}</span>
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-[11px] font-medium text-slate-100">
+            {count}
+          </span>
+        </div>
       </div>
-      {ideas.length === 0 ? (
-        <p className="text-xs text-slate-500 dark:text-slate-300">Drop an idea here</p>
-      ) : (
-        ideas.map((idea) => <IdeaCard key={idea.id} idea={idea} onAskHelper={onAskHelper} />)
-      )}
+      <div
+        className={`mt-1 max-h-64 space-y-2 overflow-y-auto rounded-xl pr-1 transition-colors ${
+          isOver ? "border border-sky-500/70 bg-slate-900" : "border border-transparent"
+        }`}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setIsOver(true);
+        }}
+        onDragLeave={() => setIsOver(false)}
+        onDrop={handleDrop}
+      >
+        {ideas.length === 0 ? (
+          <p className="text-xs text-slate-500">Drop ideas here from other lists or add new ones.</p>
+        ) : (
+          ideas.map((idea) => <IdeaCard key={idea.id} idea={idea} onAskHelper={onAskHelper} />)
+        )}
+      </div>
     </div>
   );
 }
 
-function IdeaBoard({
+function IdeasBoard({
   ideas,
   onMoveIdea,
   onAskHelper,
@@ -842,18 +767,55 @@ function IdeaBoard({
   onMoveIdea: (id: string, status: IdeaStatus) => void;
   onAskHelper: (idea: Idea) => void;
 }) {
+  const { inboxIdeas, readyIdeas, draftingIdeas, postedIdeas } = useMemo(() => {
+    return {
+      inboxIdeas: ideas.filter((idea) => idea.status === "Inbox"),
+      readyIdeas: ideas.filter((idea) => idea.status === "Ready"),
+      draftingIdeas: ideas.filter((idea) => idea.status === "Drafting"),
+      postedIdeas: ideas.filter((idea) => idea.status === "Posted"),
+    };
+  }, [ideas]);
+
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-      {STATUS_COLUMNS.map((status) => (
-        <IdeaColumn
-          key={status}
-          status={status}
-          ideas={ideas.filter((idea) => idea.status === status)}
+    <section className="mt-2 rounded-3xl border border-slate-800/60 bg-slate-950/70 px-4 py-5 shadow-xl dark:bg-slate-950/80">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-slate-50">Ideas</h2>
+          <p className="text-xs text-slate-400">See everything you’ve captured, grouped by status.</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatusColumn
+          title="Inbox"
+          count={inboxIdeas.length}
+          ideas={inboxIdeas}
           onDrop={onMoveIdea}
           onAskHelper={onAskHelper}
         />
-      ))}
-    </div>
+        <StatusColumn
+          title="Ready"
+          count={readyIdeas.length}
+          ideas={readyIdeas}
+          onDrop={onMoveIdea}
+          onAskHelper={onAskHelper}
+        />
+        <StatusColumn
+          title="Drafting"
+          count={draftingIdeas.length}
+          ideas={draftingIdeas}
+          onDrop={onMoveIdea}
+          onAskHelper={onAskHelper}
+        />
+        <StatusColumn
+          title="Posted"
+          count={postedIdeas.length}
+          ideas={postedIdeas}
+          onDrop={onMoveIdea}
+          onAskHelper={onAskHelper}
+        />
+      </div>
+    </section>
   );
 }
 
@@ -1090,13 +1052,7 @@ export default function HomePage() {
               )}
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Ideas</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-300">Drag between columns to update status</p>
-              </div>
-              <IdeaBoard ideas={filteredIdeas} onMoveIdea={moveIdea} onAskHelper={openHelper} />
-            </div>
+            <IdeasBoard ideas={filteredIdeas} onMoveIdea={moveIdea} onAskHelper={openHelper} />
           </div>
 
           <div className="hidden space-y-4 md:block">
