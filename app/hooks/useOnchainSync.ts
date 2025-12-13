@@ -1,44 +1,45 @@
 "use client";
 
-import { parseAbi } from "viem";
-import { useAccount, useWriteContract } from "wagmi";
+import { useMemo } from "react";
 
-const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000"; // TODO: replace with your deployed contract
-const CONTRACT_ABI = parseAbi([
-  // TODO: replace with your real ABI
-  "function saveIdea(bytes32 ideaId, string contentHashOrCid) external",
-]);
+type OnchainSyncStatus = "disabled" | "idle" | "syncing" | "error" | "success";
 
-export function useOnchainSync() {
-  const { address, isConnected } = useAccount();
-  const { writeContractAsync, isPending } = useWriteContract();
+export type UseOnchainSyncResult = {
+  isEnabled: boolean;
+  isSyncing: boolean;
+  status: OnchainSyncStatus;
+  lastSyncAt: string | null;
+  syncToChain: () => Promise<void>;
 
-  async function saveIdeaOnchain(params: {
-    ideaId: string; // some UUID or local id
-    hashOrCid: string; // hash of content or IPFS/Irys CID
-  }) {
-    if (!isConnected || !address) {
-      throw new Error("Wallet not connected");
-    }
+  // Fields expected by SavedIdeasPage
+  isConnected: boolean;
+  isSaving: boolean;
+  saveIdeaOnchain: (idea?: any) => Promise<void>;
+};
 
-    // simple hash truncation; real code should hash to bytes32 off-chain
-    const ideaBytes32 = `0x${params.ideaId
-      .replace(/[^0-9a-fA-F]/g, "")
-      .padEnd(64, "0")
-      .slice(0, 64)}`;
-
-    return await writeContractAsync({
-      address: CONTRACT_ADDRESS as `0x${string}`,
-      abi: CONTRACT_ABI,
-      functionName: "saveIdea",
-      args: [ideaBytes32, params.hashOrCid],
-    });
+/**
+ * Stubbed on-chain sync hook.
+ * For now it does nothing and just tells the UI that on-chain sync is disabled.
+ */
+export function useOnchainSync(_ideas?: any[]): UseOnchainSyncResult {
+  async function noop(idea?: any) {
+    console.warn(
+      "[useOnchainSync] On-chain sync is disabled in this build; wagmi/viem are not loaded.",
+      idea,
+    );
   }
 
-  return {
-    address,
-    isConnected,
-    isSaving: isPending,
-    saveIdeaOnchain,
-  };
+  return useMemo(
+    () => ({
+      isEnabled: false,
+      isSyncing: false,
+      status: "disabled" as OnchainSyncStatus,
+      lastSyncAt: null,
+      syncToChain: noop,
+      isConnected: false,
+      isSaving: false,
+      saveIdeaOnchain: noop,
+    }),
+    [],
+  );
 }
