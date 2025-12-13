@@ -229,7 +229,7 @@ export function ContentHelperModal({
           </button>
         </div>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-[1fr,1fr]">
+        <div className="mt-4 flex flex-col gap-4 md:flex-row max-h-[70vh] overflow-y-auto">
           <div className="space-y-3">
             <label className="text-sm font-medium text-slate-900 dark:text-slate-50">Mode</label>
             <div className="flex flex-wrap gap-2">
@@ -345,8 +345,16 @@ export function ContentHelperModal({
 
             <div className="space-y-2">
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">Suggestion</p>
-              <div className="min-h-[160px] whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-50">
-                {suggestion || "No suggestion yet."}
+              <div
+                className="rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 max-h-72 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/40"
+              >
+                {suggestion ? (
+                  <p className="whitespace-pre-line leading-relaxed">
+                    {suggestion}
+                  </p>
+                ) : (
+                  <p className="text-slate-500 text-sm">No suggestion yet.</p>
+                )}
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
