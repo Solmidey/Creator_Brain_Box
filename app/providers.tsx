@@ -1,23 +1,27 @@
 "use client";
 
-import "@rainbow-me/rainbowkit/styles.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { WagmiProvider } from "wagmi";
+import { ThemeProvider } from "next-themes";
 
-import { ThemeProvider } from "./components/ThemeProvider";
-import { WalletProviders, wagmiConfig } from "./lib/walletConfig";
+type ProvidersProps = { children: React.ReactNode };
 
-const queryClient = new QueryClient();
-
-export function AppProviders({ children }: { children: React.ReactNode }) {
+/**
+ * Global app providers for Creator Brain Box.
+ * Currently handles dark/light theme via next-themes.
+ */
+export function Providers({ children }: ProvidersProps) {
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <WalletProviders>{children}</WalletProviders>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem={false}
+    >
+      {children}
+    </ThemeProvider>
   );
 }
+
+// Alias so existing imports `AppProviders` keep working
+export const AppProviders = Providers;
+
+export default Providers;

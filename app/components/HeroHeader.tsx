@@ -1,6 +1,4 @@
 "use client";
-
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 
 export default function HeroHeader({ onOpenHelper }: { onOpenHelper: () => void }) {
@@ -33,10 +31,20 @@ export default function HeroHeader({ onOpenHelper }: { onOpenHelper: () => void 
           <div className="mt-1 flex flex-wrap gap-3 sm:mt-0 sm:justify-end">
             <div className="flex items-center gap-2">
               <div className="hidden sm:block">
-                <ConnectButton accountStatus="address" showBalance={false} chainStatus="icon" />
+                <button
+  type="button"
+  className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs font-medium text-slate-100 opacity-60"
+>
+  Wallet coming soon
+</button>
               </div>
               <div className="sm:hidden">
-                <ConnectButton accountStatus="avatar" showBalance={false} chainStatus="none" />
+                <button
+  type="button"
+  className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs font-medium text-slate-100 opacity-60"
+>
+  Wallet coming soon
+</button>
               </div>
             </div>
 
