@@ -24,7 +24,7 @@ export function AppHeader() {
           className="shadow-lg"
         />
         <span className="text-xs font-medium uppercase tracking-wide text-slate-600 dark:text-slate-200">
-          Creator Brain Inbox
+          CREATOR BRAIN BOX
         </span>
       </div>
 

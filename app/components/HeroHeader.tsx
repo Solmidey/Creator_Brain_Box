@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 
-import Logo from "./Logo";
-
 export default function HeroHeader({ onOpenHelper }: { onOpenHelper: () => void }) {
   return (
     <section
@@ -16,15 +14,13 @@ export default function HeroHeader({ onOpenHelper }: { onOpenHelper: () => void 
       <div className="pointer-events-none absolute -bottom-8 left-12 h-28 w-48 rotate-[14deg] bg-[linear-gradient(120deg,rgba(195,255,255,0.08),rgba(255,255,255,0)_32%),conic-gradient(from_210deg_at_50%_50%,rgba(226,232,240,0.12)_0,rgba(226,232,240,0)_26%,rgba(226,232,240,0.16)_28%,rgba(226,232,240,0)_48%,rgba(226,232,240,0.12)_50%,rgba(226,232,240,0)_100%)] opacity-60" />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex items-center gap-3 sm:gap-4">
-          <div className="relative h-12 w-12 overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_30%_0%,#38bdf8_0,#0f172a_55%,#020617_100%)] shadow-[0_0_40px_rgba(56,189,248,0.35)] sm:h-14 sm:w-14">
-            <div className="pointer-events-none absolute inset-0 opacity-35 mix-blend-screen bg-[radial-gradient(circle_at_20%_20%,rgba(248,250,252,0.3),transparent_55%),conic-gradient(from_210deg_at_50%_50%,rgba(15,23,42,0)_0,rgba(15,23,42,0)_30%,rgba(248,250,252,0.4)_32%,rgba(15,23,42,0)_34%,rgba(248,250,252,0.4)_36%,rgba(15,23,42,0)_38%,rgba(248,250,252,0.4)_40%,rgba(15,23,42,0)_100%)]" />
-            <Logo mode="light" size={52} className="absolute inset-0 m-auto shadow-lg" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Creator Brain</span>
-            <span className="text-sm font-medium text-slate-800 dark:text-slate-100">Inbox for cracked ideas</span>
-          </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
+            Vault For Your Cracked Ideas
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
+            Capture, sort, and play with every idea you don’t want to lose. Turn scattered thoughts into ready-to-post content.
+          </p>
         </div>
 
         <div className="flex flex-col gap-4 sm:items-end sm:gap-3">
