@@ -1,8 +1,15 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Contract } from "ethers";
+import { ethers } from "ethers";
 import { useEthersWallet } from "./useEthersWallet";
+
+const IDEA_VAULT_ADDRESS = "0x16ACCd3a0182fBA9B52C0298Fb7F0Bb3e34ce486";
+
+const IDEA_VAULT_ABI = [
+  // This must match the Solidity contract you deployed
+  "function saveIdeas(string[] ids, string[] contents) external",
+];
 
 export type OnchainSavePayload = {
   id: string;
@@ -14,48 +21,65 @@ export type UseOnchainVaultResult = {
   saveIdeasOnchain: (items: OnchainSavePayload[]) => Promise<void>;
 };
 
-const VAULT_ADDRESS = "0x16ACCd3a0182fBA9B52C0298Fb7F0Bb3e34ce486";
-
-// ⚠️ Make sure this matches your deployed contract's ABI later.
-// For now we assume a simple function:
-//   function saveSnapshot(string id, string content) external;
-const VAULT_ABI = [
-  "function saveSnapshot(string id, string content) external",
-] as const;
-
 export function useOnchainVault(): UseOnchainVaultResult {
-  const { signer, chainId, isConnected } = useEthersWallet();
+  const { signer, isConnected } = useEthersWallet();
   const [isSaving, setIsSaving] = useState(false);
 
   const saveIdeasOnchain = useCallback(
     async (items: OnchainSavePayload[]) => {
-      if (!items.length) return;
+      if (!items || items.length === 0) return;
 
-      if (!signer || !isConnected) {
-        throw new Error("Wallet not connected");
+      if (!isConnected || !signer) {
+        throw new Error("Wallet not connected. Connect your Base wallet first.");
       }
 
-      if (chainId !== 8453) {
+      const provider = signer.provider;
+      if (!provider) {
+        throw new Error("No provider found for connected wallet.");
+      }
+
+      const network = await provider.getNetwork();
+      const chainId = network.chainId;
+
+      // Base mainnet = 8453
+      if (chainId !== 8453n) {
         throw new Error(
-          "Please switch your wallet to Base mainnet (chainId 8453)."
+          "Please switch your wallet network to Base mainnet (chainId 8453) and try again."
         );
       }
 
-      const contract = new Contract(VAULT_ADDRESS, VAULT_ABI, signer);
+      const ids = items.map((i) => i.id ?? "");
+      const contents = items.map((i) => i.content ?? "");
 
-      setIsSaving(true);
       try {
-        // Batch into one JSON blob for now
-        const json = JSON.stringify(items);
-        const id = items[0]?.id ?? `batch-${Date.now()}`;
+        setIsSaving(true);
 
-        const tx = await contract.saveSnapshot(id, json);
+        const contract = new ethers.Contract(
+          IDEA_VAULT_ADDRESS,
+          IDEA_VAULT_ABI,
+          signer
+        );
+
+        const tx = await contract.saveIdeas(ids, contents);
         await tx.wait();
+      } catch (err: any) {
+        console.error("[useOnchainVault] Failed to save ideas", err);
+
+        // User rejected in wallet
+        if (err?.code === 4001) {
+          throw new Error("Transaction rejected in wallet.");
+        }
+
+        throw new Error(
+          err?.reason ||
+            err?.message ||
+            "Failed to save ideas onchain. See console for details."
+        );
       } finally {
         setIsSaving(false);
       }
     },
-    [signer, chainId, isConnected]
+    [isConnected, signer]
   );
 
   return { isSaving, saveIdeasOnchain };
