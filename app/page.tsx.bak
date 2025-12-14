@@ -989,53 +989,6 @@ export default function HomePage() {
         <AppHeader />
         <HeroHeader />
 
-        <section className="mt-4 grid gap-3 md:grid-cols-3">
-          <a
-            href="/brain-forge"
-            className="group flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/40 p-4 transition hover:border-sky-500 hover:bg-slate-900/80"
-          >
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-400">
-              Practice zone
-            </div>
-            <div className="mt-2 text-sm font-semibold text-slate-50">
-              Brain Forge
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
-              Draft and structure posts in layouts that feel like X, IG, YouTube &amp; more.
-            </p>
-          </a>
-
-          <a
-            href="/saved-ideas"
-            className="group flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/40 p-4 transition hover:border-sky-500 hover:bg-slate-900/80"
-          >
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
-              Idea vault
-            </div>
-            <div className="mt-2 text-sm font-semibold text-slate-50">
-              Saved Ideas
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
-              Revisit, edit, and send your best ideas to the helper or onchain whenever you&apos;re ready.
-            </p>
-          </a>
-
-          <a
-            href="/library"
-            className="group flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/40 p-4 transition hover:border-sky-500 hover:bg-slate-900/80"
-          >
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-400">
-              Media library
-            </div>
-            <div className="mt-2 text-sm font-semibold text-slate-50">
-              Library
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
-              See every image, video, and file you&apos;ve used while building — download or push snapshots to Base.
-            </p>
-          </a>
-        </section>
-
         {/* Mobile: focus + streak */}
         <div className="space-y-3 md:hidden">
           <div className="flex flex-col gap-3">

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEthersWallet } from "../hooks/useEthersWallet";
 
 export default function HeroHeader() {
-  const { address, isConnected, isConnecting, connect, disconnect } =
+  const { address, isConnected, connect, disconnect } =
     useEthersWallet();
 
   const shortAddress = React.useMemo(
@@ -34,10 +34,10 @@ export default function HeroHeader() {
           <button
             type="button"
             onClick={isConnected ? disconnect : connect}
-            disabled={isConnecting}
+            disabled={false}
             className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 shadow-md shadow-sky-500/30 hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isConnecting
+            {false
               ? "Connecting..."
               : isConnected
               ? `Disconnect ${shortAddress}`

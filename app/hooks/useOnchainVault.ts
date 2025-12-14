@@ -1,58 +1,61 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { ethers } from "ethers";
+import { Contract } from "ethers";
 import { useEthersWallet } from "./useEthersWallet";
 
-export interface OnchainSavePayload {
+export type OnchainSavePayload = {
   id: string;
   content: string;
-}
+};
 
-export interface UseOnchainVaultResult {
+export type UseOnchainVaultResult = {
   isSaving: boolean;
   saveIdeasOnchain: (items: OnchainSavePayload[]) => Promise<void>;
-}
+};
 
-const CONTRACT_ADDRESS = "0x16ACCd3a0182fBA9B52C0298Fb7F0Bb3e34ce486";
+const VAULT_ADDRESS = "0x16ACCd3a0182fBA9B52C0298Fb7F0Bb3e34ce486";
 
-// NOTE: Adjust the function name/signature here to match your deployed contract.
-const CONTRACT_ABI = [
-  "function saveIdea(string id, string content) external",
-];
+// ⚠️ Make sure this matches your deployed contract's ABI later.
+// For now we assume a simple function:
+//   function saveSnapshot(string id, string content) external;
+const VAULT_ABI = [
+  "function saveSnapshot(string id, string content) external",
+] as const;
 
 export function useOnchainVault(): UseOnchainVaultResult {
-  const { signer } = useEthersWallet();
+  const { signer, chainId, isConnected } = useEthersWallet();
   const [isSaving, setIsSaving] = useState(false);
 
   const saveIdeasOnchain = useCallback(
     async (items: OnchainSavePayload[]) => {
-      if (!signer) {
+      if (!items.length) return;
+
+      if (!signer || !isConnected) {
         throw new Error("Wallet not connected");
       }
-      if (!items || items.length === 0) return;
+
+      if (chainId !== 8453) {
+        throw new Error(
+          "Please switch your wallet to Base mainnet (chainId 8453)."
+        );
+      }
+
+      const contract = new Contract(VAULT_ADDRESS, VAULT_ABI, signer);
 
       setIsSaving(true);
-
       try {
-        const contract = new ethers.Contract(
-          CONTRACT_ADDRESS,
-          CONTRACT_ABI,
-          signer
-        );
+        // Batch into one JSON blob for now
+        const json = JSON.stringify(items);
+        const id = items[0]?.id ?? `batch-${Date.now()}`;
 
-        for (const item of items) {
-          const tx = await contract.saveIdea(item.id, item.content);
-          await tx.wait();
-        }
-      } catch (err) {
-        console.error("Failed to save ideas onchain", err);
-        throw err;
+        const tx = await contract.saveSnapshot(id, json);
+        await tx.wait();
       } finally {
         setIsSaving(false);
       }
     },
-    [signer]
+    [signer, chainId, isConnected]
   );
 
   return { isSaving, saveIdeasOnchain };
