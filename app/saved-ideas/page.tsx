@@ -3,10 +3,12 @@
 import React from "react";
 import { useSavedIdeas } from "../hooks/useSavedIdeas";
 import { useOnchainVault } from "../hooks/useOnchainVault";
+import { useEthersWallet } from "../hooks/useEthersWallet";
 
 export default function SavedIdeasPage() {
   const { savedIdeas, deleteIdea } = useSavedIdeas();
-  const { isConnected, saveIdeaOnchain, isSavingIdea } = useOnchainVault();
+  const { saveIdeasOnchain, isSaving } = useOnchainVault();
+  const { isConnected } = useEthersWallet();
 
   const handleSaveAllOnchain = async () => {
     if (!isConnected) {
@@ -21,7 +23,7 @@ export default function SavedIdeasPage() {
     try {
       const payload = JSON.stringify(savedIdeas as any);
       const id = `all-ideas-${Date.now()}`;
-      await saveIdeaOnchain(id, payload);
+      await saveIdeasOnchain([{ id, content: payload }]);
       alert("All ideas saved to Base as a snapshot.");
     } catch (err) {
       console.error(err);
@@ -38,7 +40,7 @@ export default function SavedIdeasPage() {
     try {
       const payload = JSON.stringify(idea);
       const id = idea.id || `idea-${Date.now()}`;
-      await saveIdeaOnchain(id, payload);
+      await saveIdeasOnchain([{ id, content: payload }]);
       alert("Idea saved to Base.");
     } catch (err) {
       console.error(err);
@@ -64,10 +66,10 @@ export default function SavedIdeasPage() {
         <button
           type="button"
           onClick={handleSaveAllOnchain}
-          disabled={!isConnected || isSavingIdea || list.length === 0}
+          disabled={!isConnected || isSaving || list.length === 0}
           className="inline-flex items-center rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSavingIdea ? "Saving to Base..." : "Save all ideas to Base"}
+          {isSaving ? "Saving to Base..." : "Save all ideas to Base"}
         </button>
       </div>
 
@@ -105,7 +107,7 @@ export default function SavedIdeasPage() {
                   </button>
                   <button
                     type="button"
-                    disabled={!isConnected || isSavingIdea}
+                    disabled={!isConnected || isSaving}
                     onClick={() => handleSaveSingle(idea)}
                     className="rounded-full bg-sky-600 px-3 py-1 font-medium text-white hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
                   >

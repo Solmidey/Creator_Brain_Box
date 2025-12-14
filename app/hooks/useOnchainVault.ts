@@ -1,61 +1,59 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Contract } from "ethers";
+import { useCallback, useState } from "react";
+import { ethers } from "ethers";
 import { useEthersWallet } from "./useEthersWallet";
 
-const VAULT_ADDRESS =
-  process.env.NEXT_PUBLIC_CB_VAULT_ADDRESS ??
-  "0x16ACCd3a0182fBA9B52C0298Fb7F0Bb3e34ce486";
+export interface OnchainSavePayload {
+  id: string;
+  content: string;
+}
 
-// Minimal ABI for the functions we actually use
-const CREATOR_BRAIN_VAULT_ABI = [
-  "function saveIdea(string id, string content) public",
-  "function saveLibraryItem(string id, string url, string mediaType) public",
+export interface UseOnchainVaultResult {
+  isSaving: boolean;
+  saveIdeasOnchain: (items: OnchainSavePayload[]) => Promise<void>;
+}
+
+const CONTRACT_ADDRESS = "0x16ACCd3a0182fBA9B52C0298Fb7F0Bb3e34ce486";
+
+// NOTE: Adjust the function name/signature here to match your deployed contract.
+const CONTRACT_ABI = [
+  "function saveIdea(string id, string content) external",
 ];
 
-export function useOnchainVault() {
-  const { signer, isConnected, address } = useEthersWallet();
-  const [isSavingIdea, setIsSavingIdea] = useState(false);
-  const [isSavingMedia, setIsSavingMedia] = useState(false);
+export function useOnchainVault(): UseOnchainVaultResult {
+  const { signer } = useEthersWallet();
+  const [isSaving, setIsSaving] = useState(false);
 
-  const contract = useMemo(() => {
-    if (!signer) return null;
-    return new Contract(VAULT_ADDRESS, CREATOR_BRAIN_VAULT_ABI, signer);
-  }, [signer]);
+  const saveIdeasOnchain = useCallback(
+    async (items: OnchainSavePayload[]) => {
+      if (!signer) {
+        throw new Error("Wallet not connected");
+      }
+      if (!items || items.length === 0) return;
 
-  const saveIdeaOnchain = async (id: string, content: string) => {
-    if (!contract) throw new Error("Wallet not connected");
-    setIsSavingIdea(true);
-    try {
-      const tx = await contract.saveIdea(id, content);
-      await tx.wait();
-    } finally {
-      setIsSavingIdea(false);
-    }
-  };
+      setIsSaving(true);
 
-  const saveMediaOnchain = async (
-    id: string,
-    url: string,
-    mediaType: string,
-  ) => {
-    if (!contract) throw new Error("Wallet not connected");
-    setIsSavingMedia(true);
-    try {
-      const tx = await contract.saveLibraryItem(id, url, mediaType);
-      await tx.wait();
-    } finally {
-      setIsSavingMedia(false);
-    }
-  };
+      try {
+        const contract = new ethers.Contract(
+          CONTRACT_ADDRESS,
+          CONTRACT_ABI,
+          signer
+        );
 
-  return {
-    isConnected,
-    address,
-    saveIdeaOnchain,
-    saveMediaOnchain,
-    isSavingIdea,
-    isSavingMedia,
-  };
+        for (const item of items) {
+          const tx = await contract.saveIdea(item.id, item.content);
+          await tx.wait();
+        }
+      } catch (err) {
+        console.error("Failed to save ideas onchain", err);
+        throw err;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [signer]
+  );
+
+  return { isSaving, saveIdeasOnchain };
 }

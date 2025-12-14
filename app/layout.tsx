@@ -3,7 +3,7 @@ import type React from "react";
 
 import "./globals.css";
 import { Providers } from "./providers";
-import { EthersWalletProvider } from "./hooks/useEthersWallet";
+import { WalletProvider } from "./hooks/useEthersWallet";
 
 export const metadata: Metadata = {
   title: "Creator Brain Box",
@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="bg-background text-foreground">
         <Providers>
-          <EthersWalletProvider>{children}</EthersWalletProvider>
+          <WalletProvider>{children}</WalletProvider>
         </Providers>
       </body>
     </html>
