@@ -1,16 +1,12 @@
 "use client";
 
-import {
-  OnchainSavePayload,
-  UseOnchainVaultResult,
-  useOnchainVault,
-} from "./useOnchainVault";
+import { useOnchainVault, OnchainSavePayload } from "./useOnchainVault";
 import { useEthersWallet } from "./useEthersWallet";
 
 export interface UseOnchainSyncResult {
   isConnected: boolean;
   isSaving: boolean;
-  saveIdeasOnchain: UseOnchainVaultResult["saveIdeasOnchain"];
+  saveIdeasOnchain: (payload: OnchainSavePayload) => Promise<void>;
 }
 
 export function useOnchainSync(): UseOnchainSyncResult {
