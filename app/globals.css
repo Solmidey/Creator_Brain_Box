@@ -35,3 +35,134 @@
   background: theme("colors.slate.400");
   border-radius: 9999px;
 }
+
+
+/* Creator Brain Box custom palette */
+:root {
+  --background: 210 40% 98%;          /* very light background */
+  --foreground: 222.2 47.4% 11.2%;    /* almost-black text */
+
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 47.4% 11.2%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 47.4% 11.2%;
+
+  --primary: 199 89% 55%;             /* bright sky / brand blue */
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 222.2 47.4% 96%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+
+  --accent: 199 89% 60%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 199 89% 55%;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;       /* near-black */
+  --foreground: 210 40% 98%;          /* near-white */
+
+  --card: 222.2 84% 5.3%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222.2 84% 5.3%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 199 89% 60%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  --accent: 199 89% 60%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 199 89% 60%;
+}
+
+/* Updated theme tokens for clearer light mode */
+:root {
+  /* Light mode – bright background, dark text */
+  --background: 210 40% 98%;        /* slate-50 */
+  --foreground: 222 47% 11%;        /* slate-900 */
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  --muted: 210 40% 96%;
+  --muted-foreground: 222 9% 35%;
+
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+
+  --primary: 199 89% 48%;           /* sky-500 */
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 222 47% 11%;
+  --secondary-foreground: 210 40% 98%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  --ring: 199 89% 48%;
+
+  --radius: 0.75rem;
+}
+
+.dark {
+  /* Dark mode – keep your current vibe */
+  --background: 222 84% 4.9%;
+  --foreground: 210 40% 98%;
+
+  --card: 222 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+
+  --accent: 217 33% 17%;
+  --accent-foreground: 210 40% 98%;
+
+  --border: 217 33% 17%;
+  --input: 217 33% 17%;
+
+  --primary: 199 89% 48%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 222 47% 11%;
+  --secondary-foreground: 210 40% 98%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  --ring: 199 89% 48%;
+
+  --radius: 0.75rem;
+}
