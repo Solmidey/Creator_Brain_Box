@@ -10,20 +10,26 @@ export default function SavedIdeasPage() {
   const { saveIdeasOnchain, isSaving } = useOnchainVault();
   const { isConnected } = useEthersWallet();
 
+  const list = savedIdeas ?? [];
+
   const handleSaveAllOnchain = async () => {
     if (!isConnected) {
       alert("Connect your wallet (Base) first.");
       return;
     }
-    if (!savedIdeas || savedIdeas.length === 0) {
+    if (!list.length) {
       alert("No ideas to save yet.");
       return;
     }
 
     try {
-      const payload = JSON.stringify(savedIdeas as any);
-      const id = `all-ideas-${Date.now()}`;
-      await saveIdeasOnchain([{ id, content: payload }]);
+      const payload = JSON.stringify(list as any);
+      await saveIdeasOnchain([
+        {
+          kind: "idea",
+          content: payload,
+        },
+      ]);
       alert("All ideas saved to Base as a snapshot.");
     } catch (err) {
       console.error(err);
@@ -39,16 +45,18 @@ export default function SavedIdeasPage() {
 
     try {
       const payload = JSON.stringify(idea);
-      const id = idea.id || `idea-${Date.now()}`;
-      await saveIdeasOnchain([{ id, content: payload }]);
+      await saveIdeasOnchain([
+        {
+          kind: "idea",
+          content: payload,
+        },
+      ]);
       alert("Idea saved to Base.");
     } catch (err) {
       console.error(err);
       alert("Failed to save this idea onchain.");
     }
   };
-
-  const list = savedIdeas ?? [];
 
   return (
     <div className="space-y-6">
