@@ -1,7 +1,5 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import React from "react";
 import { useMediaLibrary } from "../hooks/useMediaLibrary";
 import { useOnchainVault } from "../hooks/useOnchainVault";
@@ -9,12 +7,12 @@ import { useEthersWallet } from "../hooks/useEthersWallet";
 
 export default function LibraryPage() {
   const { items, removeItem, clearAll } = useMediaLibrary();
-  const { saveIdeasOnchain, isSaving } = useOnchainVault();
+  const { isSaving, saveIdeasOnchain } = useOnchainVault();
   const { isConnected } = useEthersWallet();
 
   const list = items ?? [];
 
-  const handleSaveAllOnchain = async () => {
+  const handleSaveLibraryOnchain = async () => {
     if (!isConnected) {
       alert("Connect your wallet (Base) first.");
       return;
@@ -25,21 +23,23 @@ export default function LibraryPage() {
     }
 
     try {
-      const payload = JSON.stringify(list);
+      const payload = JSON.stringify(list as any);
+      const id = "library-" + Date.now().toString();
       await saveIdeasOnchain([
-        {
-          kind: "media",
-          content: payload,
-        },
+        { id, kind: "media", content: payload }
       ]);
       alert("Library snapshot saved to Base.");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save library onchain. Check console for details.");
+    } catch (err: any) {
+      console.error("Failed to save library onchain:", err);
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? String((err as any).message)
+          : String(err);
+      alert("Failed to save library onchain: " + message);
     }
   };
 
-  const handleSaveSingle = async (item: any) => {
+  const handleSaveItemOnchain = async (item: any) => {
     if (!isConnected) {
       alert("Connect your wallet (Base) first.");
       return;
@@ -47,16 +47,18 @@ export default function LibraryPage() {
 
     try {
       const payload = JSON.stringify(item);
+      const id = (item.id as string) || "media-" + Date.now().toString();
       await saveIdeasOnchain([
-        {
-          kind: "media",
-          content: payload,
-        },
+        { id, kind: "media", content: payload, mediaUrl: item.url }
       ]);
       alert("Media item saved to Base.");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save media onchain.");
+    } catch (err: any) {
+      console.error("Failed to save media onchain:", err);
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? String((err as any).message)
+          : String(err);
+      alert("Failed to save media onchain: " + message);
     }
   };
 
@@ -65,94 +67,100 @@ export default function LibraryPage() {
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Library</h1>
-            <p className="mt-1 text-sm text-slate-400">
-              All images, videos and files you&apos;ve uploaded inside Creator
-              Brain Box. Stored locally first — when it matters, you can send a
-              snapshot to <span className="font-medium">Base</span>.
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Library
+            </h1>
+            <p className="mt-1 text-xs text-slate-400">
+              All images, videos and files you&apos;ve uploaded inside Creator Brain Box.
+              Stored locally first, with optional backups on Base.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={handleSaveAllOnchain}
-              disabled={!isConnected || isSaving || !list.length}
-              className="inline-flex items-center rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleSaveLibraryOnchain}
+              disabled={!isConnected || isSaving || list.length === 0}
+              className="inline-flex items-center rounded-full bg-sky-600 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSaving ? "Saving to Base..." : "Save library to Base"}
             </button>
             <button
               type="button"
               onClick={clearAll}
-              disabled={!list.length}
-              className="rounded-full border border-slate-700 px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={list.length === 0}
+              className="rounded-full border border-slate-600 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Clear all
+              Clear local library
             </button>
           </div>
         </header>
 
         {list.length === 0 ? (
           <p className="text-sm text-slate-400">
-            No media yet. Upload images or videos in Brain Forge and they&apos;ll
-            show up here.
+            No media yet. Upload images or videos in Brain Forge and they&apos;ll show up here.
           </p>
         ) : (
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             {list.map((item: any) => (
               <article
-                key={item.id ?? item.url ?? item.src ?? Math.random()}
-                className="group flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40"
+                key={item.id ?? item.url}
+                className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900/40 p-3"
               >
-                <div className="relative aspect-video w-full bg-slate-900">
-                  {item.type === "video" ? (
-                    <video
-                      src={item.url ?? item.src}
-                      controls
+                <div className="h-32 w-full overflow-hidden rounded-lg bg-slate-900">
+                  {item.type && String(item.type).startsWith("image/") ? (
+                    <img
+                      src={item.url}
+                      alt={item.name || "Media"}
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <img
-                      src={item.url ?? item.src}
-                      alt={item.alt || "Media item"}
-                      className="h-full w-full object-cover"
-                    />
+                    <div className="flex h-full items-center justify-center text-xs text-slate-400">
+                      {item.type || "file"}
+                    </div>
                   )}
                 </div>
 
-                <div className="flex flex-1 flex-col justify-between gap-2 p-3 text-xs">
-                  <div className="space-y-1">
-                    <div className="inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-slate-300">
-                      {item.type || "media"}
+                <div className="flex flex-1 flex-col justify-between gap-2 text-xs">
+                  <div>
+                    <div className="font-medium text-slate-100">
+                      {item.name || "Untitled media"}
                     </div>
-                    {item.note && (
-                      <p className="text-slate-300 line-clamp-2">
-                        {item.note}
-                      </p>
+                    {item.type && (
+                      <div className="text-slate-400">
+                        {item.type}
+                      </div>
                     )}
                   </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.id)}
-                      className="text-slate-400 hover:text-red-400"
+
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href={item.url}
+                      download={item.name || "media"}
+                      className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-100 hover:bg-slate-700"
                     >
-                      Delete
-                    </button>
+                      Download
+                    </a>
                     <button
                       type="button"
+                      onClick={() => handleSaveItemOnchain(item)}
                       disabled={!isConnected || isSaving}
-                      onClick={() => handleSaveSingle(item)}
                       className="rounded-full bg-sky-600 px-3 py-1 text-[11px] font-medium text-white hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Save onchain
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id)}
+                      className="ml-auto text-[11px] text-slate-400 hover:text-red-400"
+                    >
+                      Delete
                     </button>
                   </div>
                 </div>
               </article>
             ))}
-          </section>
+          </div>
         )}
       </div>
     </main>

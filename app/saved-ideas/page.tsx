@@ -24,16 +24,18 @@ export default function SavedIdeasPage() {
 
     try {
       const payload = JSON.stringify(list as any);
+      const id = "all-ideas-" + Date.now().toString();
       await saveIdeasOnchain([
-        {
-          kind: "idea",
-          content: payload,
-        },
+        { id, kind: "idea", content: payload }
       ]);
       alert("All ideas saved to Base as a snapshot.");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save ideas onchain. Check console for details.");
+    } catch (err: any) {
+      console.error("Failed to save ideas onchain:", err);
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? String((err as any).message)
+          : String(err);
+      alert("Failed to save ideas onchain: " + message);
     }
   };
 
@@ -45,16 +47,18 @@ export default function SavedIdeasPage() {
 
     try {
       const payload = JSON.stringify(idea);
+      const id = (idea.id as string) || "idea-" + Date.now().toString();
       await saveIdeasOnchain([
-        {
-          kind: "idea",
-          content: payload,
-        },
+        { id, kind: "idea", content: payload }
       ]);
       alert("Idea saved to Base.");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save this idea onchain.");
+    } catch (err: any) {
+      console.error("Failed to save this idea onchain:", err);
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? String((err as any).message)
+          : String(err);
+      alert("Failed to save this idea onchain: " + message);
     }
   };
 
@@ -62,9 +66,7 @@ export default function SavedIdeasPage() {
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Saved ideas
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Saved ideas</h1>
           <p className="text-sm text-muted-foreground">
             Everything is stored locally first. When it matters, you can back it
             up on <span className="font-medium">Base</span>.
